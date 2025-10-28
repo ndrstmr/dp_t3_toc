@@ -1,0 +1,26 @@
+# Site Set Definition for Table of Contents Extension
+name: ndrstmr/toc
+label: 'Table of Contents'
+
+settings:
+  dp_t3_toc:
+    # Bootstrap 5 by default (can be changed in Site Management)
+    template: 'TableOfContents'
+
+    # Default filter mode: sectionIndexOnly (most common use case)
+    defaultMode: 'sectionIndexOnly'
+
+    # Default: Exclude sidebar columns (5, 88)
+    defaultExcludeColPos: ''
+
+    # Default layout: Inline (scrolls with page, works in any column)
+    defaultLayout: 'inline'
+
+    # Enable scrollspy by default (requires Bootstrap 5 JS)
+    defaultScrollspy: true
+
+    # Enable sticky positioning by default
+    defaultSticky: true
+
+    # No depth limit by default (0 = unlimited)
+    defaultMaxDepth: 0

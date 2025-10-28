@@ -1,0 +1,117 @@
+{
+  "name": "ndrstmr/dp-t3-toc",
+  "description": "Container-aware Table of Contents DataProcessor for TYPO3 v13. Clean Architecture with Repository Pattern, flexible filtering (includeColPos/excludeColPos), multiple modes, SOLID-compliant.",
+  "license": "GPL-2.0-or-later",
+  "type": "typo3-cms-extension",
+  "keywords": [
+    "typo3",
+    "toc",
+    "table-of-contents",
+    "container",
+    "dataprocessor",
+    "b13/container",
+    "typo3-extension"
+  ],
+  "authors": [
+    {
+      "name": "Andreas Teumer",
+      "homepage": "https://github.com/ndrstmr",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/ndrstmr/dp_t3_toc/issues",
+    "source": "https://github.com/ndrstmr/dp_t3_toc"
+  },
+  "require": {
+    "php": "^8.3",
+    "typo3/cms-core": "^13.4",
+    "typo3/cms-extbase": "^13.4",
+    "typo3/cms-fluid": "^13.4",
+    "typo3/cms-frontend": "^13.4"
+  },
+  "require-dev": {
+    "a9f/typo3-fractor": "^0.5.6",
+    "ergebnis/composer-normalize": "^2.48",
+    "friendsofphp/php-cs-fixer": "^3.47",
+    "overtrue/phplint": "^9.5",
+    "phpstan/extension-installer": "^1.4",
+    "phpstan/phpstan": "^2.0",
+    "phpstan/phpstan-phpunit": "^2.0",
+    "phpstan/phpstan-strict-rules": "^2.0",
+    "phpunit/phpunit": "^10.5",
+    "saschaegerer/phpstan-typo3": "^2.1",
+    "ssch/typo3-rector": "^3.0",
+    "typo3/coding-standards": "^0.5",
+    "typo3/testing-framework": "^8.2 || ^9.0"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "autoload": {
+    "psr-4": {
+      "Ndrstmr\\DpT3Toc\\": "Classes/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Ndrstmr\\DpT3Toc\\Tests\\": "Tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "a9f/fractor-extension-installer": true,
+      "ergebnis/composer-normalize": true,
+      "phpstan/extension-installer": true,
+      "typo3/class-alias-loader": true,
+      "typo3/cms-composer-installers": true
+    },
+    "bin-dir": ".Build/bin",
+    "vendor-dir": ".Build/vendor"
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "dp_t3_toc",
+      "site-sets": [
+        "Configuration/Sets/Toc"
+      ]
+    }
+  },
+  "scripts": {
+    "check": [
+      "@check:composer:normalize",
+      "@check:php:lint",
+      "@check:php:cs",
+      "@check:php:stan"
+    ],
+    "check:composer:normalize": "@composer normalize --no-check-lock --dry-run",
+    "check:php:cs": "php-cs-fixer fix --dry-run --diff --config=Build/php-cs-fixer/.php-cs-fixer.php",
+    "check:php:fractor": "fractor process --dry-run --config=Build/fractor/fractor.php",
+    "check:php:lint": "phplint --no-progress Classes Configuration Tests",
+    "check:php:rector": "rector process --dry-run --config=Build/rector/rector.php",
+    "check:php:stan": "phpstan analyse --memory-limit=1G --configuration=Build/phpstan/phpstan.neon",
+    "fix": [
+      "@fix:composer:normalize",
+      "@fix:php:cs"
+    ],
+    "fix:composer:normalize": "@composer normalize --no-check-lock",
+    "fix:php:cs": "php-cs-fixer fix --config=Build/php-cs-fixer/.php-cs-fixer.php",
+    "fix:php:fractor": "fractor process --config=Build/fractor/fractor.php",
+    "fix:php:rector": "rector process --config=Build/rector/rector.php",
+    "test:unit": "phpunit -c Build/phpunit/UnitTests.xml"
+  },
+  "scripts-descriptions": {
+    "check": "Run all static checks",
+    "check:composer:normalize": "Check composer.json formatting",
+    "check:php:cs": "Check PHP code style (dry-run)",
+    "check:php:fractor": "Check Fractor rules for non-PHP files (dry-run)",
+    "check:php:lint": "Check PHP syntax",
+    "check:php:rector": "Check Rector rules (dry-run)",
+    "check:php:stan": "Run PHPStan static analysis",
+    "fix": "Fix all auto-fixable issues",
+    "fix:composer:normalize": "Normalize composer.json",
+    "fix:php:cs": "Fix PHP code style",
+    "fix:php:fractor": "Apply Fractor refactorings to non-PHP files",
+    "fix:php:rector": "Apply Rector refactorings",
+    "test:unit": "Run PHPUnit unit tests"
+  }
+}

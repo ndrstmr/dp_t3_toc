@@ -1,0 +1,49 @@
+/**
+ * Table of Contents - Fixed Positioning
+ *
+ * Uses position: fixed with JavaScript to emulate sticky behavior
+ * Works even when parent has overflow: hidden
+ */
+
+/* Default state: relative positioning */
+.toc-sticky-wrapper {
+    position: relative;
+    z-index: 1020; /* Below Bootstrap modals (1050) but above content */
+    /* No transitions on position changes to prevent jank */
+}
+
+/* Fixed state: applied by JavaScript when scrolling */
+.toc-sticky-wrapper.is-fixed {
+    position: fixed;
+    top: 0;
+    /* Width and left are set by JavaScript */
+    /* Use will-change to hint browser for optimization */
+    will-change: transform;
+}
+
+/* Bottom state: at the end of scrollable area */
+.toc-sticky-wrapper.is-bottom {
+    position: absolute;
+    bottom: 0;
+    /* Width and left are set by JavaScript */
+}
+
+/* Placeholder to maintain layout when TOC becomes fixed */
+.toc-sticky-placeholder {
+    display: none; /* Hidden by default */
+    /* Prevent margin collapse */
+    overflow: hidden;
+}
+
+.toc-sticky-placeholder.is-active {
+    display: block;
+    /* Height is set by JavaScript to match TOC height */
+}
+
+/* Prevent layout shift during transition */
+@media (prefers-reduced-motion: no-preference) {
+    .toc-sticky-wrapper {
+        /* Smooth transforms for minor adjustments, not position changes */
+        transition: transform 0.1s ease-out;
+    }
+}

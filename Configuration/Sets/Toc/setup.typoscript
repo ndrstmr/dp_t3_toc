@@ -1,0 +1,6 @@
+# ====================================================================
+# Table of Contents Site Set - TypoScript Setup
+# ====================================================================
+
+# Import the main TypoScript configuration
+@import 'EXT:dp_t3_toc/Configuration/TypoScript/setup.typoscript'

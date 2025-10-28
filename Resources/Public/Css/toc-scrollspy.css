@@ -1,0 +1,184 @@
+/**
+ * Table of Contents - Scrollspy Active State Styling
+ *
+ * Visual feedback for active navigation items when scrollspy is enabled
+ */
+
+/* ====================================================================
+   Bootstrap 5 Template Styles
+   ==================================================================== */
+
+/* Sidebar Layout - Kickstarter Design */
+.toc--sidebar {
+    padding-left: 0;
+}
+
+/* List itself */
+.toc--sidebar .toc__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    list-style: none;
+    padding-left: 0;
+}
+
+/* List Items - Border on item level (Kickstarter style) */
+.toc--sidebar .toc__item {
+    border-left: 4px solid var(--bs-gray-300, #d1d5db);
+    transition: border-color 0.2s ease-in-out;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.toc--sidebar .toc__item:last-child {
+    margin-bottom: 0;
+}
+
+/* Sidebar Layout with Scrollspy */
+[data-toc-scrollspy="true"] .toc--sidebar .toc__link {
+    position: relative;
+    transition: font-weight 0.2s ease-in-out;
+    display: block;
+}
+
+/* Active state - applied to list item (Kickstarter style) */
+[data-toc-scrollspy="true"] .toc--sidebar .toc__item.active {
+    border-left-color: var(--bs-primary, #0d6efd);
+}
+
+[data-toc-scrollspy="true"] .toc--sidebar .toc__item.active .toc__link {
+    font-weight: 600;
+}
+
+/* Hover state - same as active */
+[data-toc-scrollspy="true"] .toc--sidebar .toc__item:hover {
+    border-left-color: var(--bs-primary, #0d6efd);
+}
+
+[data-toc-scrollspy="true"] .toc--sidebar .toc__link:hover {
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Focus state (accessibility) */
+[data-toc-scrollspy="true"] .toc--sidebar .toc__link:focus-visible {
+    outline: 2px solid var(--bs-primary, #0d6efd);
+    outline-offset: 2px;
+}
+
+
+/* ====================================================================
+   Kern UX Template Styles
+   ==================================================================== */
+
+/* Sidebar Layout - Kickstarter Design */
+.kern-toc--sidebar {
+    padding-left: 0;
+}
+
+/* List itself */
+.kern-toc--sidebar .kern-toc__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    list-style: none;
+    padding-left: 0;
+}
+
+/* List Items - Border on item level (Kickstarter style) */
+.kern-toc--sidebar .kern-toc__item {
+    border-left: 4px solid var(--theme-neutral-300, #d1d5db);
+    transition: border-color 0.2s ease-in-out;
+    padding: var(--kern-metric-space-small, 8px) var(--kern-metric-space-default, 16px);
+}
+
+.kern-toc--sidebar .kern-toc__item:last-child {
+    margin-bottom: 0;
+}
+
+/* Sidebar Layout with Scrollspy */
+[data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__link {
+    position: relative;
+    transition: font-weight 0.2s ease-in-out;
+    display: block;
+}
+
+/* Active state - applied to list item (Kickstarter style) */
+[data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item.active {
+    border-left-color: var(--theme-brand-primary-500, #004b76);
+}
+
+[data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item.active .kern-toc__link {
+    font-weight: var(--kern-typography-font-weight-semi-bold, 600);
+}
+
+/* Hover state - same as active */
+[data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item:hover {
+    border-left-color: var(--theme-brand-primary-500, #004b76);
+}
+
+[data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__link:hover {
+    font-weight: var(--kern-typography-font-weight-semi-bold, 600);
+    text-decoration: none;
+}
+
+/* Focus state (WCAG 2.1 compliant) */
+[data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__link:focus-visible {
+    outline: 2px solid var(--kern-color-focus, #004b76);
+    outline-offset: 2px;
+}
+
+
+/* ====================================================================
+   Dark Mode Support (Kern UX)
+   ==================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    .kern-toc--sidebar .kern-toc__item {
+        border-left-color: var(--theme-neutral-600, #4b5563);
+    }
+
+    [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item.active,
+    [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item:hover {
+        border-left-color: var(--theme-brand-primary-400, #6fb3e0);
+    }
+}
+
+[data-kern-theme="dark"] .kern-toc--sidebar .kern-toc__item {
+    border-left-color: var(--theme-neutral-600, #4b5563);
+}
+
+[data-kern-theme="dark"] [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item.active,
+[data-kern-theme="dark"] [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item:hover {
+    border-left-color: var(--theme-brand-primary-400, #6fb3e0);
+}
+
+
+/* ====================================================================
+   Smooth Scrolling Enhancement
+   ==================================================================== */
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* Offset for sticky header (adjust if your site has a sticky header) */
+[data-toc-scrollspy="true"] {
+    scroll-padding-top: 100px;
+}
+
+
+/* ====================================================================
+   Accessibility: Reduced Motion
+   ==================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    [data-toc-scrollspy="true"] .toc__link,
+    [data-toc-scrollspy="true"] .kern-toc__link {
+        transition: none;
+    }
+
+    html {
+        scroll-behavior: auto;
+    }
+}

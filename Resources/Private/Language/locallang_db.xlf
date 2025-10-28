@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+    <file source-language="en" datatype="plaintext" original="messages" date="2025-10-26T12:00:00Z" product-name="dp_t3_toc">
+        <header/>
+        <body>
+            <!-- Content Element -->
+            <trans-unit id="tt_content.CType.menu_table_of_contents">
+                <source>Table of Contents</source>
+            </trans-unit>
+            <trans-unit id="tt_content.CType.menu_table_of_contents.description">
+                <source>Container-aware Table of Contents with Bootstrap 5 and Kern UX support. Automatically generates navigation from page content headers.</source>
+            </trans-unit>
+            <trans-unit id="tt_content.pages.menu_table_of_contents">
+                <source>Page for Table of Contents</source>
+            </trans-unit>
+            <trans-unit id="tt_content.tabs.toc_settings">
+                <source>Table of Contents Settings</source>
+            </trans-unit>
+
+            <!-- FlexForm: Mode -->
+            <trans-unit id="flexform.mode">
+                <source>Filter Mode</source>
+            </trans-unit>
+            <trans-unit id="flexform.mode.description">
+                <source>Determines which content elements are included in the TOC.</source>
+            </trans-unit>
+            <trans-unit id="flexform.mode.sectionIndexOnly">
+                <source>Section Index Only (elements with "Include in section index" enabled)</source>
+            </trans-unit>
+            <trans-unit id="flexform.mode.visibleHeaders">
+                <source>All Visible Headers (header_layout != 100)</source>
+            </trans-unit>
+            <trans-unit id="flexform.mode.all">
+                <source>All Elements with Headers</source>
+            </trans-unit>
+
+            <!-- FlexForm: Column Positions -->
+            <trans-unit id="flexform.includeColPos">
+                <source>Include Column Positions</source>
+            </trans-unit>
+            <trans-unit id="flexform.includeColPos.description">
+                <source>Comma-separated list of colPos to include (whitelist). Leave empty or use * to include all. Example: 0,1,2,3,4</source>
+            </trans-unit>
+            <trans-unit id="flexform.excludeColPos">
+                <source>Exclude Column Positions</source>
+            </trans-unit>
+            <trans-unit id="flexform.excludeColPos.description">
+                <source>Comma-separated list of colPos to exclude (blacklist). Takes precedence over include. Example: 5,88 (excludes sidebar columns)</source>
+            </trans-unit>
+
+            <!-- FlexForm: Depth -->
+            <trans-unit id="flexform.maxDepth">
+                <source>Maximum Nesting Depth</source>
+            </trans-unit>
+            <trans-unit id="flexform.maxDepth.description">
+                <source>Maximum depth for nested containers. 0 = unlimited.</source>
+            </trans-unit>
+
+            <!-- FlexForm: Layout -->
+            <trans-unit id="flexform.layout">
+                <source>Layout Style</source>
+            </trans-unit>
+            <trans-unit id="flexform.layout.description">
+                <source>Visual layout of the Table of Contents.</source>
+            </trans-unit>
+            <trans-unit id="flexform.layout.sidebar">
+                <source>Sidebar (sticky, Bootstrap scrollspy)</source>
+            </trans-unit>
+            <trans-unit id="flexform.layout.inline">
+                <source>Inline (horizontal list)</source>
+            </trans-unit>
+            <trans-unit id="flexform.layout.dropdown">
+                <source>Dropdown (mobile-friendly collapsible)</source>
+            </trans-unit>
+
+            <!-- FlexForm: Scrollspy -->
+            <trans-unit id="flexform.scrollspy">
+                <source>Enable Scrollspy</source>
+            </trans-unit>
+            <trans-unit id="flexform.scrollspy.description">
+                <source>Automatically highlight active section as user scrolls (requires Bootstrap 5 JavaScript).</source>
+            </trans-unit>
+
+            <!-- FlexForm: Sticky -->
+            <trans-unit id="flexform.sticky">
+                <source>Sticky Position</source>
+            </trans-unit>
+            <trans-unit id="flexform.sticky.description">
+                <source>Keep TOC visible when scrolling (only for sidebar layout).</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

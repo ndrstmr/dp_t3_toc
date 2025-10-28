@@ -1,0 +1,68 @@
+# Table of Contents - Settings Definitions
+# Defines available settings for Site Management Backend UI
+
+categories:
+  dp_t3_toc:
+    label: 'Table of Contents'
+    description: 'Configuration for the Table of Contents extension'
+
+settings:
+  dp_t3_toc.template:
+    category: dp_t3_toc
+    label: 'Template Style'
+    description: 'Choose between Bootstrap 5 or Kern UX template styling'
+    type: string
+    default: 'TableOfContents'
+    enum:
+      TableOfContents: 'Bootstrap 5 (default - modern websites)'
+      TableOfContentsKern: 'Kern UX (German government standard)'
+
+  dp_t3_toc.defaultMode:
+    category: dp_t3_toc
+    label: 'Default Filter Mode'
+    description: 'Default mode for filtering content elements in TOC'
+    type: string
+    default: 'sectionIndexOnly'
+    enum:
+      sectionIndexOnly: 'Section Index Only (elements with "Include in section index" enabled)'
+      visibleHeaders: 'Visible Headers (header_layout != 100)'
+      all: 'All Elements with Headers'
+
+  dp_t3_toc.defaultExcludeColPos:
+    category: dp_t3_toc
+    label: 'Default Excluded Column Positions'
+    description: 'Default comma-separated list of colPos to exclude (e.g., sidebar columns)'
+    type: string
+    default: ''
+
+  dp_t3_toc.defaultLayout:
+    category: dp_t3_toc
+    label: 'Default Layout Style'
+    description: 'Default visual layout for TOC elements'
+    type: string
+    default: 'inline'
+    enum:
+      inline: 'Inline (default - scrolls with page)'
+      sidebar: 'Sidebar (sticky navigation with scrollspy)'
+      dropdown: 'Dropdown (mobile-friendly collapsible menu)'
+
+  dp_t3_toc.defaultScrollspy:
+    category: dp_t3_toc
+    label: 'Enable Scrollspy by Default'
+    description: 'Auto-highlight active section as user scrolls (requires Bootstrap 5 JS)'
+    type: bool
+    default: true
+
+  dp_t3_toc.defaultSticky:
+    category: dp_t3_toc
+    label: 'Enable Sticky Position by Default'
+    description: 'Keep TOC visible when scrolling (only for sidebar layout)'
+    type: bool
+    default: true
+
+  dp_t3_toc.defaultMaxDepth:
+    category: dp_t3_toc
+    label: 'Default Maximum Nesting Depth'
+    description: 'Maximum depth for nested containers (0 = unlimited)'
+    type: int
+    default: 0

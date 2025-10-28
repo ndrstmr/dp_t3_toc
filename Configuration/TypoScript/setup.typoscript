@@ -1,0 +1,78 @@
+# ====================================================================
+# Table of Contents Content Element Configuration
+# ====================================================================
+
+tt_content.menu_table_of_contents =< lib.contentElement
+tt_content.menu_table_of_contents {
+    templateRootPaths {
+        10 = EXT:dp_t3_toc/Resources/Private/Templates/
+    }
+
+    # Template Selection: Bootstrap 5 or Kern UX (configurable via Site Settings)
+    templateName = TEXT
+    templateName {
+        data = siteSettings:dp_t3_toc.template
+        ifEmpty = TableOfContents
+    }
+
+    dataProcessing {
+        # IMPORTANT: Process FlexForm FIRST so values are available for TocProcessor
+        10 = TYPO3\CMS\Frontend\DataProcessing\FlexFormProcessor
+        10 {
+            fieldName = pi_flexform
+            as = tocSettings
+        }
+
+        20 = Ndrstmr\DpT3Toc\DataProcessing\TocProcessor
+        20 {
+            # Target page: from 'pages' field or current page
+            pidInList.cObject = TEXT
+            pidInList.cObject {
+                field = pages
+                ifEmpty.data = page:uid
+            }
+
+            # Filter mode from FlexForm (with Site Settings fallback)
+            mode.field = tocSettings.settings.mode
+            mode.ifEmpty.data = siteSettings:dp_t3_toc.defaultMode
+
+            # Include colPos from FlexForm
+            includeColPos.field = tocSettings.settings.includeColPos
+
+            # Exclude colPos from FlexForm (with Site Settings fallback)
+            excludeColPos.field = tocSettings.settings.excludeColPos
+            excludeColPos.ifEmpty.data = siteSettings:dp_t3_toc.defaultExcludeColPos
+
+            # Maximum nesting depth from FlexForm (with Site Settings fallback)
+            maxDepth.field = tocSettings.settings.maxDepth
+            maxDepth.ifEmpty.data = siteSettings:dp_t3_toc.defaultMaxDepth
+
+            # Store result as 'tocItems'
+            as = tocItems
+        }
+    }
+}
+
+# ====================================================================
+# Optional: Page-level DataProcessor (for custom implementations)
+# ====================================================================
+# Uncomment this if you want to use the TocProcessor at page level
+# instead of via Content Element
+#
+# page = PAGEVIEW
+# page {
+#   dataProcessing {
+#     10 = TYPO3\CMS\Frontend\DataProcessing\PageContentFetchingProcessor
+#     10 {
+#       as = pageContent
+#     }
+#
+#     20 = Ndrstmr\DpT3Toc\DataProcessing\TocProcessor
+#     20 {
+#       as = tocItems
+#       mode = visibleHeaders         # sectionIndexOnly|visibleHeaders|all
+#       includeColPos = *             # e.g. 0,200,201
+#       maxDepth = 3
+#     }
+#   }
+# }

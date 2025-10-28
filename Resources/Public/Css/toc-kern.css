@@ -1,0 +1,324 @@
+/**
+ * Table of Contents - Kern UX Native Styles
+ *
+ * Native Kern UX implementation using official design tokens
+ * Follows KERN design system standards for German government applications
+ * WCAG 2.1 AA compliant | Responsive | Dark mode ready
+ *
+ * @author Andreas Teumer
+ * @see https://gitlab.opencode.de/kern-ux/kern-ux-plain
+ */
+
+/* ====================================================================
+   Kern UX TOC Component
+   ==================================================================== */
+
+.kern-toc {
+    /* Use Kern typography tokens */
+    font-family: var(--kern-typography-font-family-default, "Fira Sans", "Noto Sans", "SF Pro Text", "Segoe UI", Roboto, Arial, sans-serif);
+    font-size: var(--kern-typography-font-size-static-medium, 18px);
+    line-height: var(--kern-typography-line-height-static-medium, 24px);
+}
+
+.kern-toc__header {
+    margin-bottom: var(--kern-metric-space-default, 16px);
+    font-weight: var(--kern-typography-font-weight-semi-bold, 600);
+    color: var(--kern-color-layout-text-default);
+}
+
+.kern-toc__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--kern-metric-space-none, 0);
+}
+
+.kern-toc__item {
+    margin: 0;
+}
+
+.kern-toc__link {
+    /* Kern link styling */
+    display: inline-flex;
+    align-items: flex-start;
+    gap: var(--kern-metric-space-x-small, 4px);
+
+    color: var(--kern-color-action-default);
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-skip-ink: auto;
+    text-decoration-thickness: var(--kern-1, 1px);
+    text-underline-offset: var(--kern-metric-space-2x-small, 2px);
+    text-underline-position: from-font;
+
+    padding: var(--kern-metric-space-small, 8px) var(--kern-metric-space-default, 16px);
+    border-left: var(--kern-metric-border-width-default, 2px) solid transparent;
+
+    transition: all 0.15s ease-in-out;
+}
+
+.kern-toc__link:hover {
+    text-decoration-thickness: var(--kern-3, 3px);
+    color: var(--kern-color-action-state-indicator-shade-hover);
+    background-color: var(--kern-color-action-state-indicator-tint-hover-opacity);
+}
+
+.kern-toc__link:active {
+    color: var(--kern-color-action-state-indicator-shade-active);
+    background-color: var(--kern-color-action-state-indicator-tint-active-opacity);
+}
+
+.kern-toc__link:visited {
+    color: var(--kern-color-action-visited);
+}
+
+.kern-toc__link:focus-visible {
+    position: relative;
+    z-index: 1;
+    outline-color: transparent;
+    border-radius: var(--kern-metric-border-radius-small, 0.125rem);
+    box-shadow:
+        0 0 0 2px var(--kern-color-action-on-default),
+        0 0 0 4px var(--kern-color-action-focus-border-inside),
+        0 0 0 6px var(--kern-color-action-focus-border-outside);
+}
+
+/* Active state (scrollspy) */
+.kern-toc__link.active {
+    color: var(--kern-color-action-state-indicator-shade-active);
+    background-color: var(--kern-color-action-state-indicator-tint-active-opacity);
+    border-left-color: var(--kern-color-action-default);
+    font-weight: var(--kern-typography-font-weight-semi-bold, 600);
+    text-decoration-thickness: var(--kern-3, 3px);
+}
+
+/* ====================================================================
+   Sidebar Layout
+   ==================================================================== */
+
+.kern-toc--sidebar {
+    border-left: var(--kern-metric-border-width-light, 1px) solid var(--kern-color-layout-border);
+    padding-left: 0;
+}
+
+.kern-toc--sidebar .kern-toc__list {
+    display: flex;
+    flex-direction: column;
+}
+
+.kern-toc--sidebar .kern-toc__link {
+    padding-left: var(--kern-metric-space-default, 16px);
+    display: block;
+    width: 100%;
+}
+
+/* Nested levels with Kern spacing */
+.kern-toc--sidebar .kern-toc__item--level-2 .kern-toc__link {
+    padding-left: var(--kern-metric-space-default, 16px);
+}
+
+.kern-toc--sidebar .kern-toc__item--level-3 .kern-toc__link {
+    padding-left: var(--kern-metric-space-large, 24px);
+}
+
+.kern-toc--sidebar .kern-toc__item--level-4 .kern-toc__link {
+    padding-left: var(--kern-metric-space-x-large, 32px);
+}
+
+.kern-toc--sidebar .kern-toc__item--level-5 .kern-toc__link {
+    padding-left: calc(var(--kern-metric-space-x-large, 32px) + var(--kern-metric-space-small, 8px));
+}
+
+.kern-toc--sidebar .kern-toc__item--level-6 .kern-toc__link {
+    padding-left: calc(var(--kern-metric-space-x-large, 32px) + var(--kern-metric-space-default, 16px));
+}
+
+/* Sticky positioning */
+.kern-toc--sidebar.sticky-top {
+    top: var(--kern-metric-space-default, 16px);
+    max-height: calc(100vh - var(--kern-metric-space-x-large, 32px));
+    overflow-y: auto;
+
+    /* Kern scrollbar (optional) */
+    scrollbar-width: thin;
+    scrollbar-color: var(--kern-color-layout-border) transparent;
+}
+
+.kern-toc--sidebar.sticky-top::-webkit-scrollbar {
+    width: var(--kern-metric-space-small, 8px);
+}
+
+.kern-toc--sidebar.sticky-top::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.kern-toc--sidebar.sticky-top::-webkit-scrollbar-thumb {
+    background-color: var(--kern-color-layout-border);
+    border-radius: var(--kern-metric-border-radius-small, 2px);
+}
+
+/* ====================================================================
+   Inline Layout
+   ==================================================================== */
+
+.kern-toc--inline {
+    margin-bottom: var(--kern-metric-space-x-large, 32px);
+}
+
+.kern-toc--inline .kern-toc__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kern-metric-space-small, 8px);
+}
+
+.kern-toc--inline .kern-toc__link {
+    border-left: none;
+    padding: var(--kern-metric-space-small, 8px) var(--kern-metric-space-default, 16px);
+    border-radius: var(--kern-metric-border-radius-default, 4px);
+    background-color: var(--kern-color-layout-background-hued);
+    border: var(--kern-metric-border-width-light, 1px) solid var(--kern-color-layout-border);
+    text-decoration: none;
+}
+
+.kern-toc--inline .kern-toc__link:hover {
+    background-color: var(--kern-color-action-state-indicator-tint-hover-opacity);
+    text-decoration-line: underline;
+}
+
+.kern-toc--inline .kern-toc__link.active {
+    background-color: var(--kern-color-action-state-indicator-tint-active-opacity);
+    border-color: var(--kern-color-action-default);
+}
+
+/* ====================================================================
+   Dropdown Layout
+   ==================================================================== */
+
+.kern-toc--dropdown .kern-toc__toggle {
+    width: 100%;
+    text-align: left;
+}
+
+.kern-toc--dropdown .dropdown-menu {
+    width: 100%;
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: var(--kern-color-layout-background-default);
+    border: var(--kern-metric-border-width-light, 1px) solid var(--kern-color-layout-border);
+    border-radius: var(--kern-metric-border-radius-default, 4px);
+    box-shadow: 0 var(--kern-metric-space-small, 8px) var(--kern-metric-space-default, 16px) rgba(0, 0, 0, 0.1);
+}
+
+.kern-toc--dropdown .kern-toc__item--level-2 .kern-toc__link {
+    padding-left: var(--kern-metric-space-default, 16px);
+}
+
+.kern-toc--dropdown .kern-toc__item--level-3 .kern-toc__link {
+    padding-left: var(--kern-metric-space-large, 24px);
+}
+
+.kern-toc--dropdown .kern-toc__item--level-4 .kern-toc__link {
+    padding-left: var(--kern-metric-space-x-large, 32px);
+}
+
+.kern-toc--dropdown .kern-toc__item--level-5 .kern-toc__link {
+    padding-left: calc(var(--kern-metric-space-x-large, 32px) + var(--kern-metric-space-small, 8px));
+}
+
+.kern-toc--dropdown .kern-toc__item--level-6 .kern-toc__link {
+    padding-left: calc(var(--kern-metric-space-x-large, 32px) + var(--kern-metric-space-default, 16px));
+}
+
+/* ====================================================================
+   Responsive Design (Kern breakpoints)
+   ==================================================================== */
+
+/* Mobile: Stack sidebar */
+@media (max-width: 767px) {
+    .kern-toc--sidebar {
+        border-left: none;
+        border-top: var(--kern-metric-border-width-light, 1px) solid var(--kern-color-layout-border);
+        padding-top: var(--kern-metric-space-default, 16px);
+        margin-top: var(--kern-metric-space-x-large, 32px);
+    }
+
+    .kern-toc--inline .kern-toc__list {
+        flex-direction: column;
+    }
+
+    .kern-toc--inline .kern-toc__link {
+        width: 100%;
+    }
+}
+
+/* Tablet and Desktop: Apply Kern responsive typography */
+@media (min-width: 768px) {
+    .kern-toc {
+        font-size: var(--kern-typography-font-size-adaptive-medium, 21px);
+        line-height: var(--kern-typography-line-height-adaptive-medium, 24px);
+    }
+
+    .kern-toc--sidebar {
+        max-width: 300px;
+    }
+}
+
+/* ====================================================================
+   Accessibility Features
+   ==================================================================== */
+
+/* High contrast mode support (Windows) */
+@media (prefers-contrast: high) {
+    .kern-toc__link {
+        text-decoration-thickness: var(--kern-3, 3px);
+        border-width: var(--kern-metric-border-width-bold, 4px);
+    }
+
+    .kern-toc__link:focus-visible {
+        outline: var(--kern-metric-border-width-bold, 4px) solid;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .kern-toc__link {
+        transition: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .kern-toc--sidebar.sticky-top {
+        position: static !important;
+        max-height: none !important;
+    }
+
+    .kern-toc--dropdown {
+        display: none;
+    }
+
+    .kern-toc__link {
+        color: #000 !important;
+        text-decoration: underline;
+    }
+}
+
+/* ====================================================================
+   Dark Mode (Native Kern UX Token Support)
+   ==================================================================== */
+
+/* Dark mode is automatically handled by Kern UX CSS Custom Properties:
+   - --kern-color-action-default
+   - --kern-color-layout-text-default
+   - --kern-color-layout-background-default
+   - --kern-color-layout-border
+
+   These tokens switch automatically via:
+   - @media (prefers-color-scheme: dark)
+   - [data-kern-theme=dark]
+   - .kern-dark class
+
+   No additional dark mode CSS needed!
+*/
