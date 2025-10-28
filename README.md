@@ -196,16 +196,36 @@ Classes/
 - **Testability**: Repository can be mocked for unit tests
 - **Immutability**: TocItem is a readonly Value Object
 
-## 🧪 Testing
+## 🧪 Testing & QA
 
-Run the test suite:
+Run the complete QA suite:
 
 ```bash
-composer test       # PHPUnit tests
-composer stan       # PHPStan level max
-composer rector     # Rector checks
-composer csfix      # PHP-CS-Fixer checks
+composer check              # Run all checks (normalize, lint, cs, stan)
+composer check:php:stan     # PHPStan level max
+composer check:php:cs       # PHP-CS-Fixer (dry-run)
+composer check:php:rector   # Rector checks (dry-run)
+composer check:php:fractor  # Fractor checks for non-PHP files (dry-run)
+composer check:php:lint     # PHP syntax check
+composer test:unit          # PHPUnit unit tests
+
+# Auto-fix issues
+composer fix                # Fix composer.json + code style
+composer fix:php:cs         # Apply PHP-CS-Fixer
+composer fix:php:rector     # Apply Rector refactorings
+composer fix:php:fractor    # Apply Fractor refactorings to TypoScript/XML/YAML
 ```
+
+**QA Tooling (TYPO3 Best Practices)**:
+- **PHPStan level max** with `saschaegerer/phpstan-typo3` for TYPO3 type detection
+- **PHP-CS-Fixer** for PSR-12 compliance
+- **Rector** with `ssch/typo3-rector` for TYPO3 v13 refactorings
+- **Fractor** with `a9f/typo3-fractor` for non-PHP files (TypoScript, XML, YAML, Fluid)
+- **PHPUnit** with TYPO3 testing framework
+- **Composer normalize** for consistent composer.json formatting
+- **PHPLint** for syntax validation
+
+All configurations follow the **tea extension** pattern in `Build/` subdirectories.
 
 ### Example Unit Test
 
