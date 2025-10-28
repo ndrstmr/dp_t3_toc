@@ -2,20 +2,58 @@ name: CI
 
 on:
   push:
+    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 jobs:
   qa:
+    name: Quality Assurance
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
+          extensions: dom, mbstring
           coverage: none
           tools: composer:v2
-      - run: composer install --no-interaction --prefer-dist
-      - run: vendor/bin/phpstan analyse
-      - run: vendor/bin/rector process --dry-run
-      - run: vendor/bin/php-cs-fixer fix --dry-run --diff
-      - run: vendor/bin/phpunit -c vendor/typo3/testing-framework/Resources/Core/Build/UnitTests.xml
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Normalize composer.json
+        run: composer check:composer:normalize
+
+      - name: Lint PHP files
+        run: composer check:php:lint
+
+      - name: Check code style (PHP-CS-Fixer)
+        run: composer check:php:cs
+
+      - name: Static analysis (PHPStan)
+        run: composer check:php:stan
+
+      - name: Check Rector rules
+        run: composer check:php:rector
+
+      - name: Check Fractor rules (non-PHP files)
+        run: composer check:php:fractor
+
+      - name: Run unit tests
+        run: composer test:unit
