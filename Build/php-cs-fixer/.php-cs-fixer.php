@@ -11,5 +11,5 @@ return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
     ->setRules($rules)
     ->setFinder(
-        PhpCsFixer\Finder::create()->in([__DIR__ . '/../../Classes', __DIR__ . '/Tests'])
+        PhpCsFixer\Finder::create()->in([__DIR__ . '/../../Classes', __DIR__ . '/../../Tests'])
     );
