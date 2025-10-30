@@ -11,6 +11,14 @@ services:
   Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepositoryInterface:
     alias: Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepository
 
+  # Service: Bind interface to implementation
+  Ndrstmr\DpT3Toc\Service\TocBuilderServiceInterface:
+    alias: Ndrstmr\DpT3Toc\Service\TocBuilderService
+
+  # Service: Bind interface to implementation
+  Ndrstmr\DpT3Toc\Service\TcaContainerCheckServiceInterface:
+    alias: Ndrstmr\DpT3Toc\Service\TcaContainerCheckService
+
   # DataProcessor must be public to be accessible from TypoScript
   Ndrstmr\DpT3Toc\DataProcessing\TocProcessor:
     public: true
