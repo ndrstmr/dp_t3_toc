@@ -18,7 +18,7 @@ final class TypeCastingTraitTest extends TestCase
     }
 
     #[DataProvider('asIntDataProvider')]
-    public function testAsInt($input, int $expected): void
+    public function testAsInt(mixed $input, int $expected): void
     {
         $result = $this->instance->testAsInt($input);
 
@@ -50,7 +50,7 @@ final class TypeCastingTraitTest extends TestCase
     }
 
     #[DataProvider('asStringDataProvider')]
-    public function testAsString($input, string $expected): void
+    public function testAsString(mixed $input, string $expected): void
     {
         $result = $this->instance->testAsString($input);
 
@@ -78,7 +78,7 @@ final class TypeCastingTraitTest extends TestCase
     }
 
     #[DataProvider('asFloatDataProvider')]
-    public function testAsFloat($input, float $expected): void
+    public function testAsFloat(mixed $input, float $expected): void
     {
         $result = $this->instance->testAsFloat($input);
 
@@ -109,7 +109,7 @@ final class TypeCastingTraitTest extends TestCase
     }
 
     #[DataProvider('asBoolDataProvider')]
-    public function testAsBool($input, bool $expected): void
+    public function testAsBool(mixed $input, bool $expected): void
     {
         $result = $this->instance->testAsBool($input);
 
@@ -147,7 +147,7 @@ final class TypeCastingTraitTest extends TestCase
      * @param array<array-key, mixed> $expected
      */
     #[DataProvider('asArrayDataProvider')]
-    public function testAsArray($input, array $expected): void
+    public function testAsArray(mixed $input, array $expected): void
     {
         $result = $this->instance->testAsArray($input);
 
@@ -185,22 +185,22 @@ final class TypeCastingTraitTestClass
 {
     use TypeCastingTrait;
 
-    public function testAsInt($value): int
+    public function testAsInt(mixed $value): int
     {
         return $this->asInt($value);
     }
 
-    public function testAsString($value): string
+    public function testAsString(mixed $value): string
     {
         return $this->asString($value);
     }
 
-    public function testAsFloat($value): float
+    public function testAsFloat(mixed $value): float
     {
         return $this->asFloat($value);
     }
 
-    public function testAsBool($value): bool
+    public function testAsBool(mixed $value): bool
     {
         return $this->asBool($value);
     }
@@ -208,7 +208,7 @@ final class TypeCastingTraitTestClass
     /**
      * @return array<array-key, mixed>
      */
-    public function testAsArray($value): array
+    public function testAsArray(mixed $value): array
     {
         return $this->asArray($value);
     }
