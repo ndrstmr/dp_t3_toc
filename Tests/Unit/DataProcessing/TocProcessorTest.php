@@ -47,15 +47,13 @@ final class TocProcessorTest extends TestCase
         ];
 
         $this->mockCObj->method('stdWrapValue')->willReturnCallback(
-            function (string $key, array $config) {
-                return match ($key) {
-                    'pidInList' => '42',
-                    'mode' => 'sectionIndexOnly',
-                    'includeColPos' => '',
-                    'excludeColPos' => '',
-                    'maxDepth' => null,
-                    default => null,
-                };
+            fn (string $key, array $config) => match ($key) {
+                'pidInList' => '42',
+                'mode' => 'sectionIndexOnly',
+                'includeColPos' => '',
+                'excludeColPos' => '',
+                'maxDepth' => null,
+                default => null,
             }
         );
 

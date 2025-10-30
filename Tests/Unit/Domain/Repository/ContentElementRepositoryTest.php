@@ -66,9 +66,7 @@ final class ContentElementRepositoryTest extends TestCase
 
         $this->mockExpressionBuilder
             ->method('eq')
-            ->willReturnCallback(function (string $field, string $param): string {
-                return "{$field} = {$param}";
-            });
+            ->willReturnCallback(fn (string $field, string $param): string => "{$field} = {$param}");
 
         $this->mockExpressionBuilder
             ->method('isNull')
