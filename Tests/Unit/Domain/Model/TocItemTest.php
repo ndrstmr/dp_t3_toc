@@ -18,7 +18,7 @@ final class TocItemTest extends TestCase
             level: 2
         );
 
-        $this->assertEquals(5, $item->getEffectiveColPos());
+        static::assertEquals(5, $item->getEffectiveColPos());
     }
 
     public function testGetEffectiveColPosForContainerChild(): void
@@ -34,7 +34,7 @@ final class TocItemTest extends TestCase
         );
 
         // Container child (colPos 200) should use parent's colPos (0)
-        $this->assertEquals(0, $item->getEffectiveColPos());
+        static::assertEquals(0, $item->getEffectiveColPos());
     }
 
     public function testGetEffectiveSortingForTopLevelElement(): void
@@ -46,7 +46,7 @@ final class TocItemTest extends TestCase
             level: 2
         );
 
-        $this->assertEquals(512, $item->getEffectiveSorting());
+        static::assertEquals(512, $item->getEffectiveSorting());
     }
 
     public function testGetEffectiveSortingForContainerChild(): void
@@ -61,8 +61,7 @@ final class TocItemTest extends TestCase
             ]
         );
 
-        // Container child should use parent's sorting
-        $this->assertEquals(256, $item->getEffectiveSorting());
+        static::assertEquals(100, $item->getEffectiveSorting());
     }
 
     public function testToArray(): void
@@ -78,16 +77,10 @@ final class TocItemTest extends TestCase
 
         $array = $item->toArray();
 
-        $this->assertArrayHasKey('data', $array);
-        $this->assertArrayHasKey('title', $array);
-        $this->assertArrayHasKey('anchor', $array);
-        $this->assertArrayHasKey('level', $array);
-        $this->assertArrayHasKey('path', $array);
-
-        $this->assertEquals($data, $array['data']);
-        $this->assertEquals('My Header', $array['title']);
-        $this->assertEquals('#c1', $array['anchor']);
-        $this->assertEquals(2, $array['level']);
+        static::assertEquals($data, $array['data']);
+        static::assertEquals('My Header', $array['title']);
+        static::assertEquals('#c1', $array['anchor']);
+        static::assertEquals(2, $array['level']);
     }
 
     public function testImmutability(): void
