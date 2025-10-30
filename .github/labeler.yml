@@ -1,0 +1,71 @@
+# Auto-Labeler Configuration for dp_t3_toc
+#
+# This file defines rules for automatically labeling pull requests
+# based on which files are changed.
+
+# Scope: TOC Building Logic
+scope:toc:
+  - 'Classes/Service/TocBuilderService.php'
+  - 'Classes/Domain/Model/TocItem.php'
+
+# Scope: DataProcessor
+scope:processor:
+  - 'Classes/DataProcessing/**/*'
+
+# Scope: Repository Layer
+scope:repository:
+  - 'Classes/Domain/Repository/**/*'
+
+# Scope: Service Layer
+scope:service:
+  - 'Classes/Service/**/*'
+
+# Scope: Tests
+scope:tests:
+  - 'Tests/**/*'
+  - 'phpunit.xml'
+
+# Scope: CI/CD
+scope:ci:
+  - '.github/**/*'
+  - 'Build/**/*'
+
+# Scope: Documentation
+scope:docs:
+  - '**/*.md'
+  - 'Documentation/**/*'
+
+# Category: Tests
+tests:
+  - 'Tests/**/*'
+
+# Category: Documentation
+documentation:
+  - '**/*.md'
+  - 'Documentation/**/*'
+
+# Category: Configuration
+configuration:
+  - 'Configuration/**/*'
+  - 'ext_*.php'
+  - 'composer.json'
+
+# Category: Templates
+templates:
+  - 'Resources/Private/Templates/**/*'
+  - 'Resources/Private/Partials/**/*'
+  - 'Resources/Private/Layouts/**/*'
+
+# Category: Assets
+assets:
+  - 'Resources/Public/**/*'
+
+# Category: Dependencies
+dependencies:
+  - 'composer.json'
+  - 'composer.lock'
+
+# Category: CI/CD
+ci:
+  - '.github/**/*'
+  - 'Build/**/*'
