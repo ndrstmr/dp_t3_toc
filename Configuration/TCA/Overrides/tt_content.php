@@ -20,6 +20,7 @@ ExtensionManagementUtility::addTcaSelectItem(
 );
 
 // Configure fields for menu_table_of_contents
+/** @phpstan-ignore-next-line */
 $GLOBALS['TCA']['tt_content']['types']['menu_table_of_contents'] = [
     'showitem' => '
         --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:general,

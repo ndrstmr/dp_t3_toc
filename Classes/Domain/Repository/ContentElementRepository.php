@@ -7,7 +7,6 @@ namespace Ndrstmr\DpT3Toc\Domain\Repository;
 use Doctrine\DBAL\ParameterType;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\FrontendRestrictionContainer;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Repository for fetching content elements from the database.
@@ -16,9 +15,13 @@ final readonly class ContentElementRepository implements ContentElementRepositor
 {
     public function __construct(
         private ConnectionPool $connectionPool,
+        private FrontendRestrictionContainer $restrictions,
     ) {
     }
 
+    /**
+     * @return list<array<string, mixed>> Array of tt_content rows
+     */
     public function findByPage(int $pageUid): array
     {
         if ($pageUid <= 0) {
@@ -26,7 +29,7 @@ final readonly class ContentElementRepository implements ContentElementRepositor
         }
 
         $qb = $this->connectionPool->getQueryBuilderForTable('tt_content');
-        $qb->setRestrictions(GeneralUtility::makeInstance(FrontendRestrictionContainer::class));
+        $qb->setRestrictions($this->restrictions);
 
         $rows = $qb->select('*')
             ->from('tt_content')
@@ -41,9 +44,12 @@ final readonly class ContentElementRepository implements ContentElementRepositor
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return is_array($rows) ? $rows : [];
+        return $rows;
     }
 
+    /**
+     * @return list<array<string, mixed>> Array of tt_content rows
+     */
     public function findContainerChildren(int $parentUid): array
     {
         if ($parentUid <= 0) {
@@ -51,7 +57,7 @@ final readonly class ContentElementRepository implements ContentElementRepositor
         }
 
         $qb = $this->connectionPool->getQueryBuilderForTable('tt_content');
-        $qb->setRestrictions(GeneralUtility::makeInstance(FrontendRestrictionContainer::class));
+        $qb->setRestrictions($this->restrictions);
 
         $rows = $qb->select('*')
             ->from('tt_content')
@@ -61,6 +67,6 @@ final readonly class ContentElementRepository implements ContentElementRepositor
             ->executeQuery()
             ->fetchAllAssociative();
 
-        return is_array($rows) ? $rows : [];
+        return $rows;
     }
 }
