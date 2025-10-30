@@ -1,71 +1,94 @@
-# Auto-Labeler Configuration for dp_t3_toc
+# Auto-Labeler Configuration for dp_t3_toc (actions/labeler v5 syntax)
 #
 # This file defines rules for automatically labeling pull requests
 # based on which files are changed.
 
 # Scope: TOC Building Logic
 scope:toc:
-  - 'Classes/Service/TocBuilderService.php'
-  - 'Classes/Domain/Model/TocItem.php'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Classes/Service/TocBuilderService.php'
+      - 'Classes/Domain/Model/TocItem.php'
 
 # Scope: DataProcessor
 scope:processor:
-  - 'Classes/DataProcessing/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 'Classes/DataProcessing/**/*'
 
 # Scope: Repository Layer
 scope:repository:
-  - 'Classes/Domain/Repository/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 'Classes/Domain/Repository/**/*'
 
 # Scope: Service Layer
 scope:service:
-  - 'Classes/Service/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 'Classes/Service/**/*'
 
 # Scope: Tests
 scope:tests:
-  - 'Tests/**/*'
-  - 'phpunit.xml'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Tests/**/*'
+      - 'phpunit.xml'
 
 # Scope: CI/CD
 scope:ci:
-  - '.github/**/*'
-  - 'Build/**/*'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/**/*'
+      - 'Build/**/*'
 
 # Scope: Documentation
 scope:docs:
-  - '**/*.md'
-  - 'Documentation/**/*'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*.md'
+      - 'Documentation/**/*'
 
 # Category: Tests
 tests:
-  - 'Tests/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 'Tests/**/*'
 
 # Category: Documentation
 documentation:
-  - '**/*.md'
-  - 'Documentation/**/*'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*.md'
+      - 'Documentation/**/*'
 
 # Category: Configuration
 configuration:
-  - 'Configuration/**/*'
-  - 'ext_*.php'
-  - 'composer.json'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Configuration/**/*'
+      - 'ext_*.php'
+      - 'composer.json'
 
 # Category: Templates
 templates:
-  - 'Resources/Private/Templates/**/*'
-  - 'Resources/Private/Partials/**/*'
-  - 'Resources/Private/Layouts/**/*'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Resources/Private/Templates/**/*'
+      - 'Resources/Private/Partials/**/*'
+      - 'Resources/Private/Layouts/**/*'
 
 # Category: Assets
 assets:
-  - 'Resources/Public/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 'Resources/Public/**/*'
 
 # Category: Dependencies
 dependencies:
-  - 'composer.json'
-  - 'composer.lock'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'composer.json'
+      - 'composer.lock'
 
 # Category: CI/CD
 ci:
-  - '.github/**/*'
-  - 'Build/**/*'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/**/*'
+      - 'Build/**/*'

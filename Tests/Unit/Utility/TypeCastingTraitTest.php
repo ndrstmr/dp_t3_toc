@@ -17,9 +17,6 @@ final class TypeCastingTraitTest extends TestCase
         $this->instance = new TypeCastingTraitTestClass();
     }
 
-    /**
-     * @param mixed $input
-     */
     #[DataProvider('asIntDataProvider')]
     public function testAsInt($input, int $expected): void
     {
@@ -52,9 +49,6 @@ final class TypeCastingTraitTest extends TestCase
         ];
     }
 
-    /**
-     * @param mixed $input
-     */
     #[DataProvider('asStringDataProvider')]
     public function testAsString($input, string $expected): void
     {
@@ -83,9 +77,6 @@ final class TypeCastingTraitTest extends TestCase
         ];
     }
 
-    /**
-     * @param mixed $input
-     */
     #[DataProvider('asFloatDataProvider')]
     public function testAsFloat($input, float $expected): void
     {
@@ -117,9 +108,6 @@ final class TypeCastingTraitTest extends TestCase
         ];
     }
 
-    /**
-     * @param mixed $input
-     */
     #[DataProvider('asBoolDataProvider')]
     public function testAsBool($input, bool $expected): void
     {
@@ -156,7 +144,6 @@ final class TypeCastingTraitTest extends TestCase
     }
 
     /**
-     * @param mixed $input
      * @param array<array-key, mixed> $expected
      */
     #[DataProvider('asArrayDataProvider')]
@@ -198,41 +185,27 @@ final class TypeCastingTraitTestClass
 {
     use TypeCastingTrait;
 
-    /**
-     * @param mixed $value
-     */
     public function testAsInt($value): int
     {
         return $this->asInt($value);
     }
 
-    /**
-     * @param mixed $value
-     */
     public function testAsString($value): string
     {
         return $this->asString($value);
     }
 
-    /**
-     * @param mixed $value
-     */
     public function testAsFloat($value): float
     {
         return $this->asFloat($value);
     }
 
-    /**
-     * @param mixed $value
-     */
     public function testAsBool($value): bool
     {
         return $this->asBool($value);
     }
 
     /**
-     * @param mixed $value
-     *
      * @return array<array-key, mixed>
      */
     public function testAsArray($value): array
