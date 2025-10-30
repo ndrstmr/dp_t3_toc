@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Ndrstmr\DpT3Toc\DataProcessing;
 
-use Ndrstmr\DpT3Toc\Service\TocBuilderService;
+use Ndrstmr\DpT3Toc\Domain\Model\TocItem;
+use Ndrstmr\DpT3Toc\Service\TocBuilderServiceInterface;
+use Ndrstmr\DpT3Toc\Utility\TypeCastingTrait;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\CMS\Frontend\ContentObject\DataProcessorInterface;
+use TYPO3\CMS\Frontend\Page\PageInformation;
 
 /**
  * DataProcessor for building a Table of Contents (TOC).
@@ -20,11 +23,21 @@ use TYPO3\CMS\Frontend\ContentObject\DataProcessorInterface;
  */
 final readonly class TocProcessor implements DataProcessorInterface
 {
+    use TypeCastingTrait;
+
     public function __construct(
-        private TocBuilderService $tocBuilder,
+        private TocBuilderServiceInterface $tocBuilder,
     ) {
     }
 
+    /**
+     * @param ContentObjectRenderer $cObj                       The ContentObjectRenderer
+     * @param array<mixed>          $contentObjectConfiguration The configuration of this CObject
+     * @param array<mixed>          $processorConfiguration     The configuration of this DataProcessor
+     * @param array<mixed>          $processedData              The processed data from previous DataProcessors
+     *
+     * @return array<mixed> The final processed data
+     */
     public function process(
         ContentObjectRenderer $cObj,
         array $contentObjectConfiguration,
@@ -33,36 +46,42 @@ final readonly class TocProcessor implements DataProcessorInterface
     ): array {
         // Parse configuration
         // Priority: 1. FlexForm (from tocSettings), 2. TypoScript, 3. Defaults
-        $as = (string) ($processorConfiguration['as'] ?? 'tocItems');
+        $as = $this->asString($processorConfiguration['as'] ?? 'tocItems');
 
-        // Get FlexForm values if available (processed by FlexFormProcessor before this)
-        $flexFormSettings = $processedData['tocSettings']['settings'] ?? [];
+        $tocSettings = $this->asArray($processedData['tocSettings'] ?? null);
+        $flexFormSettings = $this->asArray($tocSettings['settings'] ?? []);
 
         // Mode: FlexForm > TypoScript > Default
-        $mode = !empty($flexFormSettings['mode'])
-            ? (string) $flexFormSettings['mode']
-            : ($cObj->stdWrapValue('mode', $processorConfiguration) ?: 'visibleHeaders');
+        $tsMode = $this->asString($cObj->stdWrapValue('mode', $processorConfiguration));
+        $mode = (isset($flexFormSettings['mode']) && '' !== $flexFormSettings['mode'])
+            ? $this->asString($flexFormSettings['mode'])
+            : ('' !== $tsMode ? $tsMode : 'visibleHeaders');
 
         // Include colPos: FlexForm > TypoScript > Default
-        $includeColPos = !empty($flexFormSettings['includeColPos'])
-            ? (string) $flexFormSettings['includeColPos']
-            : ($cObj->stdWrapValue('includeColPos', $processorConfiguration) ?: '*');
+        $tsIncludeColPos = $this->asString($cObj->stdWrapValue('includeColPos', $processorConfiguration));
+        $includeColPos = (isset($flexFormSettings['includeColPos']) && '' !== $flexFormSettings['includeColPos'])
+            ? $this->asString($flexFormSettings['includeColPos'])
+            : ('' !== $tsIncludeColPos ? $tsIncludeColPos : '*');
 
         // Exclude colPos: FlexForm > TypoScript > Default
-        $excludeColPos = !empty($flexFormSettings['excludeColPos'])
-            ? (string) $flexFormSettings['excludeColPos']
-            : ($cObj->stdWrapValue('excludeColPos', $processorConfiguration) ?: '');
+        $tsExcludeColPos = $this->asString($cObj->stdWrapValue('excludeColPos', $processorConfiguration));
+        $excludeColPos = (isset($flexFormSettings['excludeColPos']) && '' !== $flexFormSettings['excludeColPos'])
+            ? $this->asString($flexFormSettings['excludeColPos'])
+            : ('' !== $tsExcludeColPos ? $tsExcludeColPos : '');
 
         // MaxDepth: FlexForm > TypoScript > Default
-        $maxDepth = isset($flexFormSettings['maxDepth']) && '' !== $flexFormSettings['maxDepth']
-            ? (int) $flexFormSettings['maxDepth']
-            : (int) ($cObj->stdWrapValue('maxDepth', $processorConfiguration) ?: '0');
+        $tsMaxDepth = $cObj->stdWrapValue('maxDepth', $processorConfiguration);
+        $maxDepth = (isset($flexFormSettings['maxDepth']) && '' !== $flexFormSettings['maxDepth'])
+            ? $this->asInt($flexFormSettings['maxDepth'])
+            : $this->asInt('' !== $this->asString($tsMaxDepth) ? $tsMaxDepth : '0');
 
         // Resolve page UID
+        /** @var array<string, mixed> $processorConfiguration */
         $pageUid = $this->resolvePageUid($cObj, $processorConfiguration);
 
         // Get current content element UID to exclude it from TOC
-        $currentUid = (int) ($processedData['data']['uid'] ?? 0);
+        $data = $this->asArray($processedData['data'] ?? null);
+        $currentUid = $this->asInt($data['uid'] ?? 0);
 
         // Parse colPos filters
         $allowedColPos = $this->normalizeColPosFilter($includeColPos);
@@ -75,7 +94,10 @@ final readonly class TocProcessor implements DataProcessorInterface
         $tocItems = $this->tocBuilder->sortItems($tocItems);
 
         // Transform to Fluid-compatible array format
-        $processedData[$as] = array_map(fn ($item) => $item->toArray(), $tocItems);
+        $processedData[$as] = array_map(
+            static fn (TocItem $item): array => $item->toArray(),
+            $tocItems
+        );
 
         return $processedData;
     }
@@ -83,7 +105,9 @@ final readonly class TocProcessor implements DataProcessorInterface
     /**
      * Parse colPos filter from configuration.
      *
-     * @return array<int>|null Null if empty/wildcard, otherwise array of integers
+     * @param string $colPosFilter The raw colPos string (e.g., "1,2,3" or "*")
+     *
+     * @return list<int>|null Null if empty/wildcard, otherwise a list of integers
      */
     private function normalizeColPosFilter(string $colPosFilter): ?array
     {
@@ -98,27 +122,48 @@ final readonly class TocProcessor implements DataProcessorInterface
         // Parse comma-separated list
         $list = array_filter(
             array_map(trim(...), explode(',', $colPosFilter)),
-            fn ($val) => '' !== $val
+            // Filter out empty values (e.g., from "1,,2")
+            static fn (string $val): bool => '' !== $val
         );
 
         // Return null if no valid values
-        if (empty($list)) {
+        if ([] === $list) {
             return null;
         }
 
-        return array_map(intval(...), $list);
+        $intList = array_map(intval(...), $list);
+        // $intList is e.g., [0 => 1, 2 => 3]
+
+        // Reset keys to ensure a 'list' (0-indexed, non-sparse)
+        // This makes [0 => 1, 2 => 3] into [0 => 1, 1 => 3]
+        return array_values($intList);
     }
 
     /**
      * Resolve the page UID from configuration or current page.
+     *
+     * @param array<string, mixed> $processorConfiguration
      */
     private function resolvePageUid(ContentObjectRenderer $cObj, array $processorConfiguration): int
     {
-        // Use stdWrapValue to handle pidInList and pidInList.field properly
-        $pageUid = $cObj->stdWrapValue('pidInList', $processorConfiguration);
+        // stdWrapValue returns mixed, casting to string is safe for comparison
+        $pageUid = (string) $cObj->stdWrapValue('pidInList', $processorConfiguration);
 
         if ('' === $pageUid || 'this' === $pageUid) {
-            return (int) ($GLOBALS['TYPO3_REQUEST']->getAttribute('frontend.page.information')->getId() ?? 0);
+            // getRequest() returns ServerRequest (non-nullable)
+            $request = $cObj->getRequest();
+
+            $pageInformation = $request->getAttribute('frontend.page.information');
+
+            // This is the crucial check for PHPStan max level
+            if (!$pageInformation instanceof PageInformation) {
+                // Attribute is not set or has an unexpected type
+                return 0;
+            }
+
+            // After this check, PHPStan knows $pageInformation is PageInformation
+            // PageInformation::getId() returns int|null
+            return $pageInformation->getId();
         }
 
         return (int) $pageUid;

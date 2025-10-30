@@ -1,8 +1,14 @@
 parameters:
-  level: max
-  paths:
-    - %currentWorkingDirectory%/Classes/
-    - %currentWorkingDirectory%/Configuration/
-    - %currentWorkingDirectory%/Tests/
-  phpVersion: 80300
-  reportUnmatchedIgnoredErrors: false
+    level: max
+    paths:
+        - %currentWorkingDirectory%/Classes/
+        - %currentWorkingDirectory%/Configuration/
+        - %currentWorkingDirectory%/Tests/
+    phpVersion: 80300
+    reportUnmatchedIgnoredErrors: false
+
+    bootstrapFiles:
+        - %currentWorkingDirectory%/.Build/vendor/autoload.php
+
+    stubFiles:
+        - %currentWorkingDirectory%/Tests/Stubs/TYPO3/CMS/Frontend/Page/PageInformation.php

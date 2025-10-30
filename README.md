@@ -207,7 +207,7 @@ composer check:php:cs       # PHP-CS-Fixer (dry-run)
 composer check:php:rector   # Rector checks (dry-run)
 composer check:php:fractor  # Fractor checks for non-PHP files (dry-run)
 composer check:php:lint     # PHP syntax check
-composer test:unit          # PHPUnit unit tests
+composer test:unit          # PHPUnit unit tests (115 tests, 157 assertions)
 
 # Auto-fix issues
 composer fix                # Fix composer.json + code style
@@ -217,21 +217,31 @@ composer fix:php:fractor    # Apply Fractor refactorings to TypoScript/XML/YAML
 ```
 
 **QA Tooling (TYPO3 Best Practices)**:
-- **PHPStan level max** with `saschaegerer/phpstan-typo3` for TYPO3 type detection
+- **PHPStan level max** with `saschaegerer/phpstan-typo3` for TYPO3 type detection (0 errors)
 - **PHP-CS-Fixer** for PSR-12 compliance
 - **Rector** with `ssch/typo3-rector` for TYPO3 v13 refactorings
 - **Fractor** with `a9f/typo3-fractor` for non-PHP files (TypoScript, XML, YAML, Fluid)
-- **PHPUnit** with TYPO3 testing framework
+- **PHPUnit** with TYPO3 testing framework (115 tests, 100% class coverage)
 - **Composer normalize** for consistent composer.json formatting
 - **PHPLint** for syntax validation
 
 All configurations follow the **tea extension** pattern in `Build/` subdirectories.
+
+**Test Coverage**:
+- ✅ `TocProcessor` - Configuration parsing, FlexForm overrides, PageInformation handling
+- ✅ `TocBuilderService` - Business logic, colPos filtering, maxDepth, container recursion
+- ✅ `ContentElementRepository` - Database queries, restrictions, ordering
+- ✅ `TocItem` - Value object, effective sorting/colPos
+- ✅ `TcaContainerCheckService` - TCA access wrapper
+- ✅ `TypeCastingTrait` - Type-safe casting helpers
 
 ### Example Unit Test
 
 ```php
 use Ndrstmr\DpT3Toc\Service\TocBuilderService;
 use Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepositoryInterface;
+use Ndrstmr\DpT3Toc\Service\TcaContainerCheckServiceInterface;
+use PHPUnit\Framework\TestCase;
 
 class TocBuilderServiceTest extends TestCase
 {
@@ -239,15 +249,21 @@ class TocBuilderServiceTest extends TestCase
     {
         $mockRepo = $this->createMock(ContentElementRepositoryInterface::class);
         $mockRepo->method('findByPage')->willReturn([
-            ['uid' => 1, 'header' => 'Header 1', 'colPos' => 0, 'sectionIndex' => 1],
-            ['uid' => 2, 'header' => 'Sidebar', 'colPos' => 5, 'sectionIndex' => 1],
+            ['uid' => 1, 'header' => 'Header 1', 'colPos' => 0, 'sectionIndex' => 1,
+             'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Sidebar', 'colPos' => 5, 'sectionIndex' => 1,
+             'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
         ]);
+        $mockRepo->method('findContainerChildren')->willReturn([]);
 
-        $service = new TocBuilderService($mockRepo);
+        $mockContainerCheck = $this->createMock(TcaContainerCheckServiceInterface::class);
+        $mockContainerCheck->method('isContainer')->willReturn(false);
+
+        $service = new TocBuilderService($mockRepo, $mockContainerCheck);
         $toc = $service->buildForPage(1, 'sectionIndexOnly', null, [5]);
 
-        $this->assertCount(1, $toc);
-        $this->assertEquals('Header 1', $toc[0]->title);
+        static::assertCount(1, $toc);
+        static::assertEquals('Header 1', $toc[0]->title);
     }
 }
 ```
@@ -460,6 +476,15 @@ See [Documentation/KERN-UX-Integration.md](Documentation/KERN-UX-Integration.md)
 ## 🙏 Credits
 
 Developed by [Andreas Teumer](https://github.com/ndrstmr) for the TYPO3 community.
+
+### Development Notes
+
+Parts of this extension's development were assisted by AI agents ([Claude Code](https://claude.com/claude-code), [Google Gemini](https://gemini.google.com)), particularly for:
+- PHPStan max level refactoring and type safety improvements
+- Comprehensive unit test coverage implementation
+- Code review and architectural optimization
+
+All AI-generated code was carefully reviewed, tested, and validated to meet TYPO3 best practices and PSR-12 standards.
 
 ---
 

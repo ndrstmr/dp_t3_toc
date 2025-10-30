@@ -1,0 +1,132 @@
+name: Feature Request
+description: Suggest an idea or enhancement for this project
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please fill out this form to help us understand your request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: What problem are you trying to solve? What use case does this address?
+      placeholder: |
+        I'm always frustrated when...
+        I need to be able to...
+        Currently it's not possible to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How do you think this feature should work?
+      placeholder: |
+        Describe your ideal solution. How should it behave?
+        What configuration options should it have?
+        What would the API/interface look like?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other solutions or workarounds have you considered?
+      placeholder: |
+        Have you tried any workarounds?
+        Are there other extensions that solve this differently?
+        Why aren't those alternatives sufficient?
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What type of feature is this?
+      options:
+        - New configuration option
+        - New filter/mode
+        - Performance improvement
+        - Integration with other extension
+        - DataProcessor enhancement
+        - Backend UI improvement
+        - Documentation improvement
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical (blocking my work)
+        - High (would significantly improve my workflow)
+        - Medium (would be nice to have)
+        - Low (minor improvement)
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case Example
+      description: Provide a concrete example of how you would use this feature
+      placeholder: |
+        In my project, I have...
+        I would configure it like...
+        The expected output would be...
+
+  - type: textarea
+    id: code-example
+    attributes:
+      label: Code Example (Optional)
+      description: If applicable, provide a code example of how you imagine using this feature
+      placeholder: |
+        10 = Ndrstmr\DpT3Toc\DataProcessing\TocProcessor
+        10 {
+            pidInList = this
+            newOption = value
+        }
+      render: typoscript
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, links, or references
+      placeholder: |
+        - Links to similar features in other extensions
+        - Screenshots/mockups
+        - Related issues or discussions
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to help implement this feature?
+      options:
+        - label: I would be willing to submit a Pull Request for this feature
+          required: false
+        - label: I can help with testing this feature
+          required: false
+        - label: I can help with documentation for this feature
+          required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Before submitting, please confirm
+      options:
+        - label: I have checked the documentation to ensure this feature doesn't already exist
+          required: true
+        - label: I have searched for similar feature requests
+          required: true
+        - label: This feature request is specific and actionable
+          required: true

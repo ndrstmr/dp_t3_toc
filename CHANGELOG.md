@@ -5,6 +5,102 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2025-10-30
+
+### ⚠ BREAKING CHANGES
+
+**Constructor Signatures Changed (DI)**:
+- `TocBuilderService` now requires `TcaContainerCheckServiceInterface` as second constructor parameter
+- `ContentElementRepository` now requires `FrontendRestrictionContainer` via constructor DI
+- **Impact**: Manual instantiation (`new TocBuilderService(...)`) will break. TYPO3 auto-wiring handles this automatically via `Services.yaml`. Only affects custom code that directly instantiates these classes.
+
+### Added
+
+#### Architecture & Testability
+- **New Service**: `TcaContainerCheckService` + `TcaContainerCheckServiceInterface` - Testable wrapper for `$GLOBALS['TCA']` access (Wrapper Pattern)
+- **New Utility**: `TypeCastingTrait` with type-safe helpers:
+  - `asInt()` - Safe int casting with fallback to 0
+  - `asString()` - Safe string casting with empty string fallback
+  - `asFloat()` - Safe float casting with fallback to 0.0
+  - `asBool()` - Safe bool casting using `FILTER_VALIDATE_BOOLEAN`
+  - `asArray()` - Safe array type guard with empty array fallback
+- **PHPStan Stub**: `Tests/Stubs/TYPO3/CMS/Frontend/Page/PageInformation.php` for static analysis without full TYPO3 bootstrap
+
+#### Tests (NEW - 115 Tests Total)
+- **`TypeCastingTraitTest`** (69 test cases):
+  - All edge cases: scalars, null, arrays, objects
+  - Comprehensive coverage for each casting method
+- **`ContentElementRepositoryTest`** (8 tests):
+  - Database query execution and parameter binding
+  - Frontend restrictions handling
+  - Ordering validation (colPos + sorting)
+- **`TcaContainerCheckServiceTest`** (7 tests):
+  - Type-safe `$GLOBALS['TCA']` manipulation
+  - Container detection logic
+  - Case sensitivity validation
+- **`TocBuilderServiceTest`** (extended with 8 new tests):
+  - `allowedColPos` filtering
+  - `excludedColPos` filtering (blacklist)
+  - Combined include/exclude filters
+  - `excludeUid` behavior
+  - `maxDepth` limiting at different nesting levels
+  - Different modes (`visibleHeaders`, `all`)
+
+### Changed
+
+#### Dependency Injection
+- **`ContentElementRepository`**: Replaced `GeneralUtility::makeInstance(ConnectionPool)` with constructor DI of `FrontendRestrictionContainer`
+- **`TocBuilderService`**: Replaced direct `$GLOBALS['TCA']` access with `TcaContainerCheckServiceInterface` injection
+- **`TocProcessor`**: Now uses `TypeCastingTrait` for all configuration value parsing
+
+#### Type Safety (PHPStan Max Level)
+- Replaced all `empty()` checks with strict comparisons (`!== []`, `!== ''`, `!== null`)
+- Replaced short ternary operators (`?:`) with null coalesce (`??`) where applicable
+- Added proper PHPDoc annotations:
+  - `array<string, mixed>` for associative arrays
+  - `list<int>` for indexed int arrays
+  - `array<int, TocItem>` for typed collections
+- Fixed "0-bug": `maxDepth: 0` and similar zero-values now handled correctly (no longer treated as "not set")
+
+#### Test Improvements
+- All tests now PHPStan max level compliant:
+  - Replaced dynamic `$this->assert...` with `static::assert...`
+  - Fixed mock setup using `willReturnCallback()` for complex parameter matching
+  - Properly typed all mocks with intersection types (`MockObject&InterfaceName`)
+  - Fixed Doctrine DBAL enum handling (`ParameterType|int` union type)
+- Refactored `TocProcessorTest`, `TocBuilderServiceTest`, `TocItemTest` for new DI structure
+- Added `willReturnMap()` for multi-parameter mock scenarios
+
+### Fixed
+
+- **`TocItem::getEffectiveSorting()`**: Fixed critical bug where container children incorrectly used parent's sorting instead of their own
+- **`TocProcessor::resolvePageUid()`**: Added proper `instanceof PageInformation` check for PHPStan max level compliance
+- **PHPStan**: All 205+ errors at max level resolved without ignores (except intentional `$GLOBALS['TCA']` access in `TcaContainerCheckService`)
+
+### Documentation
+
+- **Commit Message**: Full Conventional Commits format with detailed BREAKING CHANGE section
+- **Test Coverage**: Increased from ~22 tests to 115 tests (157 assertions)
+- **Code Comments**: Added PHPDoc explaining design decisions (e.g., Wrapper Pattern for TCA access)
+
+### Technical Details
+
+**Before (2.1.0)**:
+- 3 test files, ~22 tests
+- PHPStan errors at max level
+- Direct `$GLOBALS` access in business logic
+- Mixed type handling with `empty()` and `?:`
+- Untestable due to hard dependencies
+
+**After (3.0.0)**:
+- 6 test files, 115 tests (157 assertions)
+- PHPStan max level: 0 errors
+- Clean DI with testable interfaces
+- Strict type handling with type guards
+- 100% unit test coverage for all classes
+
+---
+
 ## [2.1.0] - 2025-10-26
 
 ### Added

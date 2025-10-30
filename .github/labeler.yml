@@ -1,0 +1,94 @@
+# Auto-Labeler Configuration for dp_t3_toc (actions/labeler v5 syntax)
+#
+# This file defines rules for automatically labeling pull requests
+# based on which files are changed.
+
+# Scope: TOC Building Logic
+scope:toc:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Classes/Service/TocBuilderService.php'
+      - 'Classes/Domain/Model/TocItem.php'
+
+# Scope: DataProcessor
+scope:processor:
+  - changed-files:
+    - any-glob-to-any-file: 'Classes/DataProcessing/**/*'
+
+# Scope: Repository Layer
+scope:repository:
+  - changed-files:
+    - any-glob-to-any-file: 'Classes/Domain/Repository/**/*'
+
+# Scope: Service Layer
+scope:service:
+  - changed-files:
+    - any-glob-to-any-file: 'Classes/Service/**/*'
+
+# Scope: Tests
+scope:tests:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Tests/**/*'
+      - 'phpunit.xml'
+
+# Scope: CI/CD
+scope:ci:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/**/*'
+      - 'Build/**/*'
+
+# Scope: Documentation
+scope:docs:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*.md'
+      - 'Documentation/**/*'
+
+# Category: Tests
+tests:
+  - changed-files:
+    - any-glob-to-any-file: 'Tests/**/*'
+
+# Category: Documentation
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*.md'
+      - 'Documentation/**/*'
+
+# Category: Configuration
+configuration:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Configuration/**/*'
+      - 'ext_*.php'
+      - 'composer.json'
+
+# Category: Templates
+templates:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Resources/Private/Templates/**/*'
+      - 'Resources/Private/Partials/**/*'
+      - 'Resources/Private/Layouts/**/*'
+
+# Category: Assets
+assets:
+  - changed-files:
+    - any-glob-to-any-file: 'Resources/Public/**/*'
+
+# Category: Dependencies
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'composer.json'
+      - 'composer.lock'
+
+# Category: CI/CD
+ci:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/**/*'
+      - 'Build/**/*'
