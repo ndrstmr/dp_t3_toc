@@ -8,6 +8,9 @@ composer.lock
 .var/
 tmp/
 
+# TYPO3 Testing Framework
+/public/
+
 # AI project files
 /.claude/
 /.gemini/
