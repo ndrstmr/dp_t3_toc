@@ -267,4 +267,138 @@ final class ContentElementRepositoryTest extends TestCase
 
         $this->repository->findContainerChildren(1);
     }
+
+    // ========================================
+    // Tests for v4.0.0 Multi-Page Support
+    // ========================================
+
+    public function testFindByPagesReturnsEmptyArrayForEmptyInput(): void
+    {
+        $result = $this->repository->findByPages([]);
+
+        static::assertSame([], $result);
+    }
+
+    public function testFindByPagesReturnsEmptyArrayForInvalidUids(): void
+    {
+        $result = $this->repository->findByPages([0, -1, -5]);
+
+        static::assertSame([], $result);
+    }
+
+    public function testFindByPagesExecutesQueryWithMultiplePageUids(): void
+    {
+        $pageUids = [42, 43, 44];
+        $expectedRows = [
+            ['uid' => 1, 'pid' => 42, 'header' => 'Test 1'],
+            ['uid' => 2, 'pid' => 43, 'header' => 'Test 2'],
+            ['uid' => 3, 'pid' => 44, 'header' => 'Test 3'],
+        ];
+
+        $mockResult = $this->createMock(Result::class);
+        $mockResult->method('fetchAllAssociative')->willReturn($expectedRows);
+
+        $mockOrExpression = $this->createMock(CompositeExpression::class);
+
+        $this->mockExpressionBuilder->method('in')->willReturn('pid IN (:pageUids)');
+        $this->mockExpressionBuilder->method('eq')->willReturn('expr');
+        $this->mockExpressionBuilder->method('isNull')->willReturn('expr');
+        $this->mockExpressionBuilder->method('or')->willReturn($mockOrExpression);
+
+        $this->mockQueryBuilder->method('expr')->willReturn($this->mockExpressionBuilder);
+        $this->mockQueryBuilder->method('select')->with('*')->willReturnSelf();
+        $this->mockQueryBuilder->method('from')->with('tt_content')->willReturnSelf();
+        $this->mockQueryBuilder->method('where')->willReturnSelf();
+        $this->mockQueryBuilder->method('orderBy')->with('pid', 'ASC')->willReturnSelf();
+        $this->mockQueryBuilder->method('addOrderBy')->with('sorting', 'ASC')->willReturnSelf();
+        $this->mockQueryBuilder->method('executeQuery')->willReturn($mockResult);
+        $this->mockQueryBuilder->method('createNamedParameter')->willReturn(':pageUids');
+        $this->mockQueryBuilder->method('setRestrictions')->with($this->mockRestrictions)->willReturnSelf();
+
+        $this->mockConnectionPool
+            ->method('getQueryBuilderForTable')
+            ->with('tt_content')
+            ->willReturn($this->mockQueryBuilder);
+
+        $result = $this->repository->findByPages($pageUids);
+
+        static::assertSame($expectedRows, $result);
+    }
+
+    public function testFindByPagesFiltersOutInvalidUids(): void
+    {
+        $pageUids = [0, 42, -1, 43, 0]; // Should use only [42, 43]
+        $mockResult = $this->createMock(Result::class);
+        $mockResult->method('fetchAllAssociative')->willReturn([]);
+
+        $mockOrExpression = $this->createMock(CompositeExpression::class);
+
+        $this->mockExpressionBuilder->method('in')->willReturn('expr');
+        $this->mockExpressionBuilder->method('eq')->willReturn('expr');
+        $this->mockExpressionBuilder->method('isNull')->willReturn('expr');
+        $this->mockExpressionBuilder->method('or')->willReturn($mockOrExpression);
+
+        $this->mockQueryBuilder->method('expr')->willReturn($this->mockExpressionBuilder);
+        $this->mockQueryBuilder->method('select')->willReturnSelf();
+        $this->mockQueryBuilder->method('from')->willReturnSelf();
+        $this->mockQueryBuilder->method('where')->willReturnSelf();
+        $this->mockQueryBuilder->method('orderBy')->willReturnSelf();
+        $this->mockQueryBuilder->method('addOrderBy')->willReturnSelf();
+        $this->mockQueryBuilder->method('executeQuery')->willReturn($mockResult);
+        $this->mockQueryBuilder->method('createNamedParameter')->willReturn(':param');
+        $this->mockQueryBuilder->method('setRestrictions')->willReturnSelf();
+
+        $this->mockConnectionPool
+            ->method('getQueryBuilderForTable')
+            ->willReturn($this->mockQueryBuilder);
+
+        $result = $this->repository->findByPages($pageUids);
+
+        static::assertSame([], $result);
+    }
+
+    public function testFindAllContainerChildrenForPagesReturnsEmptyArrayForEmptyInput(): void
+    {
+        $result = $this->repository->findAllContainerChildrenForPages([]);
+
+        static::assertSame([], $result);
+    }
+
+    public function testFindAllContainerChildrenForPagesExecutesJoinQuery(): void
+    {
+        $pageUids = [42, 43];
+        $expectedRows = [
+            ['uid' => 10, 'tx_container_parent' => 5, 'header' => 'Child 1'],
+            ['uid' => 11, 'tx_container_parent' => 5, 'header' => 'Child 2'],
+            ['uid' => 12, 'tx_container_parent' => 7, 'header' => 'Child 3'],
+        ];
+
+        $mockResult = $this->createMock(Result::class);
+        $mockResult->method('fetchAllAssociative')->willReturn($expectedRows);
+
+        $this->mockExpressionBuilder->method('in')->willReturn('expr');
+        $this->mockExpressionBuilder->method('gt')->willReturn('expr');
+        $this->mockExpressionBuilder->method('eq')->willReturn('expr');
+
+        $this->mockQueryBuilder->method('expr')->willReturn($this->mockExpressionBuilder);
+        $this->mockQueryBuilder->method('select')->with('c.*')->willReturnSelf();
+        $this->mockQueryBuilder->method('from')->with('tt_content', 'c')->willReturnSelf();
+        $this->mockQueryBuilder->method('innerJoin')->willReturnSelf();
+        $this->mockQueryBuilder->method('where')->willReturnSelf();
+        $this->mockQueryBuilder->method('orderBy')->with('c.tx_container_parent', 'ASC')->willReturnSelf();
+        $this->mockQueryBuilder->method('addOrderBy')->willReturnSelf();
+        $this->mockQueryBuilder->method('executeQuery')->willReturn($mockResult);
+        $this->mockQueryBuilder->method('createNamedParameter')->willReturn(':param');
+        $this->mockQueryBuilder->method('quoteIdentifier')->willReturnArgument(0);
+        $this->mockQueryBuilder->method('setRestrictions')->with($this->mockRestrictions)->willReturnSelf();
+
+        $this->mockConnectionPool
+            ->method('getQueryBuilderForTable')
+            ->with('tt_content')
+            ->willReturn($this->mockQueryBuilder);
+
+        $result = $this->repository->findAllContainerChildrenForPages($pageUids);
+
+        static::assertSame($expectedRows, $result);
+    }
 }

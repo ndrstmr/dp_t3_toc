@@ -58,8 +58,8 @@ final class TocProcessorTest extends TestCase
 
         $this->mockService
             ->expects(static::once())
-            ->method('buildForPage')
-            ->with(42, 'sectionIndexOnly', null, null, 0, 0)
+            ->method('buildForPages')
+            ->with([42], 'sectionIndexOnly', null, null, 0, 0)
             ->willReturn($mockItems);
 
         $this->mockService
@@ -95,8 +95,8 @@ final class TocProcessorTest extends TestCase
 
         $this->mockService
             ->expects(static::once())
-            ->method('buildForPage')
-            ->with(0, 'ffMode', null, null, 5, 0)
+            ->method('buildForPages')
+            ->with([0], 'ffMode', null, null, 5, 0)
             ->willReturn([]);
         $this->mockService->method('sortItems')->willReturn([]);
 
@@ -127,8 +127,8 @@ final class TocProcessorTest extends TestCase
 
         $this->mockService
             ->expects(static::once())
-            ->method('buildForPage')
-            ->with(0, 'visibleHeaders', null, null, 0, 999)
+            ->method('buildForPages')
+            ->with([0], 'visibleHeaders', null, null, 0, 999)
             ->willReturn([]);
         $this->mockService->method('sortItems')->willReturn([]);
 
@@ -152,8 +152,8 @@ final class TocProcessorTest extends TestCase
 
         $this->mockService
             ->expects(static::once())
-            ->method('buildForPage')
-            ->with(0, 'visibleHeaders', null, null, 0, 0)
+            ->method('buildForPages')
+            ->with([0], 'visibleHeaders', null, null, 0, 0)
             ->willReturn([]);
         $this->mockService->method('sortItems')->willReturn([]);
 
@@ -192,5 +192,125 @@ final class TocProcessorTest extends TestCase
             'with double commas' => ['1,,3', [1, 3]],
             'only commas' => [',,', null],
         ];
+    }
+
+    // ========================================
+    // Tests for v4.0.0 Multi-Page Support
+    // ========================================
+
+    public function testProcessHandlesMultiplePageUidsInPidInList(): void
+    {
+        $mockItems = [
+            new TocItem(data: ['uid' => 1, 'pid' => 42], title: 'Header from page 42', anchor: '#c1', level: 2),
+            new TocItem(data: ['uid' => 2, 'pid' => 43], title: 'Header from page 43', anchor: '#c2', level: 2),
+        ];
+
+        $processorConfig = [
+            'as' => 'tocItems',
+            'pidInList' => '42,43',
+        ];
+
+        $this->mockCObj->method('stdWrapValue')->willReturnCallback(
+            fn (string $key, array $config) => match ($key) {
+                'pidInList' => '42,43',
+                'mode' => null,
+                'includeColPos' => null,
+                'excludeColPos' => null,
+                'maxDepth' => null,
+                default => null,
+            }
+        );
+
+        $this->mockService
+            ->expects(static::once())
+            ->method('buildForPages')
+            ->with([42, 43], 'visibleHeaders', null, null, 0, 0)
+            ->willReturn($mockItems);
+
+        $this->mockService
+            ->expects(static::once())
+            ->method('sortItems')
+            ->with($mockItems)
+            ->willReturn($mockItems);
+
+        $result = $this->processor->process(
+            $this->mockCObj,
+            [],
+            $processorConfig,
+            []
+        );
+
+        static::assertArrayHasKey('tocItems', $result);
+        $tocItems = $result['tocItems'];
+        static::assertIsArray($tocItems);
+        static::assertCount(2, $tocItems);
+        static::assertIsArray($tocItems[0]);
+        static::assertIsArray($tocItems[1]);
+        static::assertArrayHasKey('title', $tocItems[0]);
+        static::assertArrayHasKey('title', $tocItems[1]);
+        static::assertEquals('Header from page 42', $tocItems[0]['title']);
+        static::assertEquals('Header from page 43', $tocItems[1]['title']);
+    }
+
+    public function testProcessHandlesPidInListWithWhitespace(): void
+    {
+        $this->mockCObj->method('stdWrapValue')->willReturnCallback(
+            fn (string $key) => match ($key) {
+                'pidInList' => ' 10, 20 , 30 ',
+                default => null,
+            }
+        );
+
+        $this->mockService
+            ->expects(static::once())
+            ->method('buildForPages')
+            ->with([10, 20, 30], 'visibleHeaders', null, null, 0, 0)
+            ->willReturn([]);
+
+        $this->mockService->method('sortItems')->willReturn([]);
+
+        $this->processor->process($this->mockCObj, [], [], []);
+    }
+
+    public function testProcessFiltersOutInvalidPidsInPidInList(): void
+    {
+        $this->mockCObj->method('stdWrapValue')->willReturnCallback(
+            fn (string $key) => match ($key) {
+                'pidInList' => '0,42,-5,43,abc',
+                default => null,
+            }
+        );
+
+        // Should only use [42, 43] (filter out 0, -5, and non-numeric 'abc')
+        $this->mockService
+            ->expects(static::once())
+            ->method('buildForPages')
+            ->with([42, 43], 'visibleHeaders', null, null, 0, 0)
+            ->willReturn([]);
+
+        $this->mockService->method('sortItems')->willReturn([]);
+
+        $this->processor->process($this->mockCObj, [], [], []);
+    }
+
+    public function testProcessHandlesEmptyPidInListAsCurrent(): void
+    {
+        $this->mockCObj->method('stdWrapValue')->willReturnCallback(
+            fn (string $key) => match ($key) {
+                'pidInList' => '',
+                default => null,
+            }
+        );
+
+        // Empty pidInList should result in [0] as fallback (no PageInformation in mock)
+        $this->mockService
+            ->expects(static::once())
+            ->method('buildForPages')
+            ->with([0], 'visibleHeaders', null, null, 0, 0)
+            ->willReturn([]);
+
+        $this->mockService->method('sortItems')->willReturn([]);
+
+        $this->processor->process($this->mockCObj, [], [], []);
     }
 }
