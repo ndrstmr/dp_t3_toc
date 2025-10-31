@@ -26,12 +26,12 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageWithSectionIndexMode(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 1, 'header' => 'Header 1', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 2, 'header' => 'Header 2', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 3, 'header' => 'Header 3', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
         ]);
-        $this->mockRepo->method('findContainerChildren')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
         $this->mockContainerCheck->method('isContainer')->willReturn(false);
 
         $toc = $this->service->buildForPage(1, 'sectionIndexOnly');
@@ -44,22 +44,17 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageWithContainer(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 10, 'header' => 'Before Container', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 20, 'header' => '', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 512, 'CType' => 'container_2col', 'header_layout' => 0],
             ['uid' => 30, 'header' => 'After Container', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
         ]);
 
-        $this->mockRepo->method('findContainerChildren')->willReturnCallback(function ($parentUid) {
-            if (20 === $parentUid) {
-                return [
-                    ['uid' => 21, 'header' => 'Child 1', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 20],
-                    ['uid' => 22, 'header' => 'Child 2', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 200, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 20],
-                ];
-            }
-
-            return [];
-        });
+        // Eager loading: All container children in one flat list
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([
+            ['uid' => 21, 'header' => 'Child 1', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 20],
+            ['uid' => 22, 'header' => 'Child 2', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 200, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 20],
+        ]);
 
         $this->mockContainerCheck->method('isContainer')
             ->willReturnCallback(static fn (string $ctype): bool => 'container_2col' === $ctype);
@@ -79,12 +74,12 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testSortItemsByColPos(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 3, 'header' => 'ColPos 2', 'colPos' => 2, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 1, 'header' => 'ColPos 0', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 2, 'header' => 'ColPos 1', 'colPos' => 1, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
         ]);
-        $this->mockRepo->method('findContainerChildren')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
 
         $toc = $this->service->buildForPage(1, 'sectionIndexOnly');
         $sorted = $this->service->sortItems($toc);
@@ -96,7 +91,7 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testEmptyResultWhenNoElements(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([]);
+        $this->mockRepo->method('findByPages')->willReturn([]);
 
         $toc = $this->service->buildForPage(1, 'sectionIndexOnly');
 
@@ -105,10 +100,10 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testEmptyResultWhenNoMatchingMode(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 1, 'header' => 'Header', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
         ]);
-        $this->mockRepo->method('findContainerChildren')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
 
         $toc = $this->service->buildForPage(1, 'sectionIndexOnly');
 
@@ -117,12 +112,12 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageWithAllowedColPos(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 1, 'header' => 'ColPos 0', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 2, 'header' => 'ColPos 1', 'colPos' => 1, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 3, 'header' => 'ColPos 2', 'colPos' => 2, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
         ]);
-        $this->mockRepo->method('findContainerChildren')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
         $this->mockContainerCheck->method('isContainer')->willReturn(false);
 
         // Only allow colPos 0 and 2
@@ -135,12 +130,12 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageWithExcludedColPos(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 1, 'header' => 'ColPos 0', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 2, 'header' => 'ColPos 1', 'colPos' => 1, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 3, 'header' => 'ColPos 2', 'colPos' => 2, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
         ]);
-        $this->mockRepo->method('findContainerChildren')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
         $this->mockContainerCheck->method('isContainer')->willReturn(false);
 
         // Exclude colPos 1
@@ -151,14 +146,56 @@ final class TocBuilderServiceTest extends TestCase
         static::assertEquals('ColPos 2', $toc[1]->title);
     }
 
+    /**
+     * Test that container children inherit parent's colPos visibility.
+     *
+     * Scenario: Container in colPos=0, children have internal colPos=200,201.
+     * Filter: includeColPos=[0]
+     * Expected: Container + all children are included (children inherit parent visibility).
+     *
+     * This test verifies the fix for the critical bug where container children
+     * were incorrectly filtered out by their internal colPos values.
+     */
+    public function testContainerChildrenInheritParentColPosVisibility(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 100, 'header' => 'Container in ColPos 0', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'container_2col', 'header_layout' => 0],
+            ['uid' => 200, 'header' => 'Element in ColPos 1 (excluded)', 'colPos' => 1, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+
+        // Container children with internal colPos values (200, 201)
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([
+            ['uid' => 101, 'header' => 'Child 1 (internal colPos=200)', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 100],
+            ['uid' => 102, 'header' => 'Child 2 (internal colPos=201)', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 200, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 100],
+        ]);
+
+        $this->mockContainerCheck->method('isContainer')
+            ->willReturnCallback(static fn (string $ctype): bool => 'container_2col' === $ctype);
+
+        // Filter: Only allow colPos=0
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', [0]);
+
+        // Expected: Container header + both children (inherit parent's visibility)
+        // NOT expected: Element in ColPos 1
+        static::assertCount(3, $toc);
+        static::assertEquals('Container in ColPos 0', $toc[0]->title);
+        static::assertEquals('Child 1 (internal colPos=200)', $toc[1]->title);
+        static::assertEquals('Child 2 (internal colPos=201)', $toc[2]->title);
+
+        // Verify children have correct path to parent
+        static::assertNotEmpty($toc[1]->path);
+        static::assertEquals(100, $toc[1]->path[0]['uid']);
+        static::assertEquals(0, $toc[1]->path[0]['colPos']); // Parent's colPos, not child's internal value
+    }
+
     public function testBuildForPageWithBothAllowedAndExcluded(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 1, 'header' => 'ColPos 0', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 2, 'header' => 'ColPos 1', 'colPos' => 1, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 3, 'header' => 'ColPos 2', 'colPos' => 2, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
         ]);
-        $this->mockRepo->method('findContainerChildren')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
         $this->mockContainerCheck->method('isContainer')->willReturn(false);
 
         // Allow 0,1,2 but exclude 1 (blacklist takes precedence)
@@ -171,12 +208,12 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageExcludesCurrentUid(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 1, 'header' => 'Header 1', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 2, 'header' => 'TOC Element', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'list', 'header_layout' => 0],
             ['uid' => 3, 'header' => 'Header 3', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
         ]);
-        $this->mockRepo->method('findContainerChildren')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
         $this->mockContainerCheck->method('isContainer')->willReturn(false);
 
         // Exclude UID 2 (the TOC element itself)
@@ -189,25 +226,16 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageWithMaxDepthLimitsNesting(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 10, 'header' => 'Top Level', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 20, 'header' => '', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 512, 'CType' => 'container_2col', 'header_layout' => 0],
         ]);
 
-        $this->mockRepo->method('findContainerChildren')->willReturnCallback(function ($parentUid) {
-            if (20 === $parentUid) {
-                return [
-                    ['uid' => 21, 'header' => 'Level 2', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'container_nested', 'header_layout' => 0],
-                ];
-            }
-            if (21 === $parentUid) {
-                return [
-                    ['uid' => 22, 'header' => 'Level 3 (should be excluded)', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0],
-                ];
-            }
-
-            return [];
-        });
+        // Eager loading: All nested container children
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([
+            ['uid' => 21, 'header' => 'Level 2', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'container_nested', 'header_layout' => 0, 'tx_container_parent' => 20],
+            ['uid' => 22, 'header' => 'Level 3 (should be excluded)', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 21],
+        ]);
 
         $this->mockContainerCheck->method('isContainer')
             ->willReturnCallback(static fn (string $ctype): bool => in_array($ctype, ['container_2col', 'container_nested'], true));
@@ -223,25 +251,16 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageWithMaxDepthAllowsOneLevelDeeper(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 10, 'header' => 'Top Level', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 20, 'header' => '', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 512, 'CType' => 'container_2col', 'header_layout' => 0],
         ]);
 
-        $this->mockRepo->method('findContainerChildren')->willReturnCallback(function ($parentUid) {
-            if (20 === $parentUid) {
-                return [
-                    ['uid' => 21, 'header' => 'Level 3 Child', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'container_nested', 'header_layout' => 0],
-                ];
-            }
-            if (21 === $parentUid) {
-                return [
-                    ['uid' => 22, 'header' => 'Level 4 (should be excluded)', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0],
-                ];
-            }
-
-            return [];
-        });
+        // Eager loading: All nested levels
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([
+            ['uid' => 21, 'header' => 'Level 3 Child', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'container_nested', 'header_layout' => 0, 'tx_container_parent' => 20],
+            ['uid' => 22, 'header' => 'Level 4 (should be excluded)', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 21],
+        ]);
 
         $this->mockContainerCheck->method('isContainer')
             ->willReturnCallback(static fn (string $ctype): bool => in_array($ctype, ['container_2col', 'container_nested'], true));
@@ -257,24 +276,15 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageWithMaxDepthZeroIsUnlimited(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 20, 'header' => '', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 512, 'CType' => 'container_2col', 'header_layout' => 0],
         ]);
 
-        $this->mockRepo->method('findContainerChildren')->willReturnCallback(function ($parentUid) {
-            if (20 === $parentUid) {
-                return [
-                    ['uid' => 21, 'header' => 'Level 2', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'container_nested', 'header_layout' => 0],
-                ];
-            }
-            if (21 === $parentUid) {
-                return [
-                    ['uid' => 22, 'header' => 'Level 3', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0],
-                ];
-            }
-
-            return [];
-        });
+        // Eager loading: All nested levels
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([
+            ['uid' => 21, 'header' => 'Level 2', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'container_nested', 'header_layout' => 0, 'tx_container_parent' => 20],
+            ['uid' => 22, 'header' => 'Level 3', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 21],
+        ]);
 
         $this->mockContainerCheck->method('isContainer')
             ->willReturnCallback(static fn (string $ctype): bool => in_array($ctype, ['container_2col', 'container_nested'], true));
@@ -289,12 +299,12 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageWithVisibleHeadersMode(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 1, 'header' => 'Visible', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 2, 'header' => 'Hidden', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 100],
             ['uid' => 3, 'header' => '', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
         ]);
-        $this->mockRepo->method('findContainerChildren')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
         $this->mockContainerCheck->method('isContainer')->willReturn(false);
 
         $toc = $this->service->buildForPage(1, 'visibleHeaders');
@@ -305,12 +315,12 @@ final class TocBuilderServiceTest extends TestCase
 
     public function testBuildForPageWithAllMode(): void
     {
-        $this->mockRepo->method('findByPage')->willReturn([
+        $this->mockRepo->method('findByPages')->willReturn([
             ['uid' => 1, 'header' => 'Header 1', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
             ['uid' => 2, 'header' => 'Header 2', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 100],
             ['uid' => 3, 'header' => '', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
         ]);
-        $this->mockRepo->method('findContainerChildren')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
         $this->mockContainerCheck->method('isContainer')->willReturn(false);
 
         $toc = $this->service->buildForPage(1, 'all');
@@ -319,5 +329,98 @@ final class TocBuilderServiceTest extends TestCase
         static::assertCount(2, $toc);
         static::assertEquals('Header 1', $toc[0]->title);
         static::assertEquals('Header 2', $toc[1]->title);
+    }
+
+    /**
+     * Test default anchor generation (useHeaderLink=false).
+     *
+     * Default behavior: Always use #c{uid} format, regardless of header_link field.
+     */
+    public function testBuildForPageWithDefaultAnchorGeneration(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Header 1', 'header_link' => 'custom-anchor', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Header 2', 'header_link' => '', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        // Default: useHeaderLink=false
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', null, null, 0, 0, false);
+
+        static::assertCount(2, $toc);
+        // Both should use #c{uid} format (default behavior)
+        static::assertEquals('#c1', $toc[0]->anchor);
+        static::assertEquals('#c2', $toc[1]->anchor);
+    }
+
+    /**
+     * Test configurable anchor generation with header_link field (useHeaderLink=true).
+     *
+     * When enabled:
+     * - Uses header_link field value if available
+     * - Falls back to #c{uid} if header_link is empty
+     */
+    public function testBuildForPageWithHeaderLinkAnchorGeneration(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Header with Link', 'header_link' => 'custom-anchor', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Header without Link', 'header_link' => '', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 3, 'header' => 'Header with Whitespace Link', 'header_link' => '  ', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        // Enable header_link usage
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', null, null, 0, 0, true);
+
+        static::assertCount(3, $toc);
+
+        // Element with header_link should use custom anchor
+        static::assertEquals('#custom-anchor', $toc[0]->anchor);
+        static::assertEquals('Header with Link', $toc[0]->title);
+
+        // Element without header_link should fall back to #c{uid}
+        static::assertEquals('#c2', $toc[1]->anchor);
+        static::assertEquals('Header without Link', $toc[1]->title);
+
+        // Element with whitespace-only header_link should fall back to #c{uid}
+        static::assertEquals('#c3', $toc[2]->anchor);
+        static::assertEquals('Header with Whitespace Link', $toc[2]->title);
+    }
+
+    /**
+     * Test that header_link anchor works with nested containers.
+     *
+     * Container children should inherit the useHeaderLink setting.
+     */
+    public function testBuildForPageWithHeaderLinkInContainerChildren(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 20, 'header' => 'Container', 'header_link' => 'container-anchor', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'container_2col', 'header_layout' => 0],
+        ]);
+
+        // Container children with mixed header_link availability
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([
+            ['uid' => 21, 'header' => 'Child with Link', 'header_link' => 'child-anchor', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 20],
+            ['uid' => 22, 'header' => 'Child without Link', 'header_link' => '', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 200, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 20],
+        ]);
+
+        $this->mockContainerCheck->method('isContainer')
+            ->willReturnCallback(static fn (string $ctype): bool => 'container_2col' === $ctype);
+
+        // Enable header_link usage
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', null, null, 0, 0, true);
+
+        static::assertCount(3, $toc);
+
+        // Container uses custom anchor
+        static::assertEquals('#container-anchor', $toc[0]->anchor);
+
+        // Child with header_link uses custom anchor
+        static::assertEquals('#child-anchor', $toc[1]->anchor);
+
+        // Child without header_link falls back to #c{uid}
+        static::assertEquals('#c22', $toc[2]->anchor);
     }
 }

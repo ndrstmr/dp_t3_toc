@@ -4,37 +4,19 @@
 
 <f:section name="Main">
 
-<f:comment>DEBUG: TOC Configuration</f:comment>
-<f:if condition="{_debug_toc}">
-    <script>
-        console.log('TOC Debug Info:', <f:format.raw>{_debug_toc -> f:format.json()}</f:format.raw>);
-    </script>
-</f:if>
-
-<f:comment>Load TOC JavaScript (for frame enhancement) and CSS</f:comment>
 <f:asset.css identifier="toc-sticky" href="EXT:dp_t3_toc/Resources/Public/Css/toc-sticky.css" />
 <f:asset.script identifier="toc-scrollspy" src="EXT:dp_t3_toc/Resources/Public/JavaScript/toc-scrollspy.js" />
 <f:if condition="{tocSettings.settings.scrollspy}">
     <f:asset.css identifier="toc-scrollspy" href="EXT:dp_t3_toc/Resources/Public/Css/toc-scrollspy.css" />
 </f:if>
 
-<f:comment>
-    Table of Contents Template - Kern UX Native
-    Uses official Kern UX design tokens and component patterns
-    WCAG 2.1 AA compliant | Responsive | Dark mode ready
-    Note: Header is rendered by Default Layout, not by this template
-</f:comment>
-
 <f:if condition="{tocItems}">
     <f:switch expression="{tocSettings.settings.layout}">
 
         <f:case value="sidebar">
-            <f:comment>Sidebar Layout: Navigation for sidebar (Kern UX)</f:comment>
-            <f:comment>Note: sticky-top class and scrollspy data-attributes are added by TypoScript to the frame</f:comment>
-
             <nav id="kern-toc-{data.uid}"
                  class="kern-toc kern-toc--sidebar"
-                 aria-label="{f:if(condition: data.header, then: data.header, else: 'Inhaltsverzeichnis')}"
+                 aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}"
                  data-toc-layout="sidebar"
                  data-toc-sticky="{tocSettings.settings.sticky}"
                  data-toc-scrollspy="{tocSettings.settings.scrollspy}"
@@ -55,10 +37,9 @@
         </f:case>
 
         <f:case value="inline">
-            <f:comment>Inline Layout: Horizontal navigation (Kern UX)</f:comment>
             <nav id="kern-toc-{data.uid}"
                  class="kern-toc kern-toc--inline"
-                 aria-label="{f:if(condition: data.header, then: data.header, else: 'Inhaltsverzeichnis')}">
+                 aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}">
 
                 <ul class="kern-toc__list kern-list kern-list--horizontal">
                     <f:for each="{tocItems}" as="item">
@@ -74,10 +55,9 @@
         </f:case>
 
         <f:case value="dropdown">
-            <f:comment>Dropdown Layout: Mobile-friendly collapsible menu (Bootstrap + Kern UX)</f:comment>
             <nav id="kern-toc-{data.uid}"
                  class="kern-toc kern-toc--dropdown"
-                 aria-label="{f:if(condition: data.header, then: data.header, else: 'Inhaltsverzeichnis')}">
+                 aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}">
 
                 <div class="dropdown">
                     <button class="kern-btn kern-btn--secondary dropdown-toggle kern-toc__toggle"
@@ -87,7 +67,7 @@
                             aria-expanded="false">
                         <f:if condition="{data.header}">
                             <f:then>{data.header}</f:then>
-                            <f:else>Inhaltsverzeichnis</f:else>
+                            <f:else><f:translate key="toc.dropdown_label" extensionName="DpT3Toc" /></f:else>
                         </f:if>
                     </button>
 
@@ -106,10 +86,9 @@
         </f:case>
 
         <f:defaultCase>
-            <f:comment>Default: Sidebar layout</f:comment>
             <nav id="kern-toc-{data.uid}"
                  class="kern-toc kern-toc--sidebar"
-                 aria-label="Inhaltsverzeichnis">
+                 aria-label="{f:translate(key: 'toc.aria_label', extensionName: 'DpT3Toc')}">
 
                 <ul class="kern-toc__list kern-list">
                     <f:for each="{tocItems}" as="item">
@@ -125,54 +104,6 @@
 
     </f:switch>
 </f:if>
-
-<f:comment>
-    ============================================================================
-    Kern UX Integration
-    ============================================================================
-
-    This template uses official Kern UX CSS classes and design tokens:
-
-    Typography:
-    - .kern-list            : List component with Kern spacing
-    - .kern-list--horizontal: Horizontal list variant
-    - .kern-link            : Link component with Kern styling
-
-    Components:
-    - .kern-btn             : Button component (for dropdown)
-    - .kern-btn--secondary  : Secondary button variant
-
-    Design Tokens (via toc-kern.css):
-    - --kern-color-action-default
-    - --kern-color-action-visited
-    - --kern-color-layout-text-default
-    - --kern-color-layout-background-default
-    - --kern-color-layout-border
-    - --kern-metric-space-*
-    - --kern-metric-border-*
-    - --kern-typography-*
-
-    Accessibility (WCAG 2.1 AA):
-    - Semantic <nav> with aria-label
-    - Focus-visible styling with Kern focus tokens
-    - Keyboard navigation support
-    - Screen reader friendly
-    - High contrast mode support
-    - Reduced motion support
-
-    Dark Mode:
-    Automatically handled by Kern UX design tokens via:
-    - @media (prefers-color-scheme: dark)
-    - [data-kern-theme=dark] attribute
-    - .kern-dark class
-
-    Responsive:
-    - Mobile-first design
-    - Kern UX breakpoints (@media min-width: 768px)
-    - Adaptive typography tokens
-
-    ============================================================================
-</f:comment>
 
 </f:section>
 

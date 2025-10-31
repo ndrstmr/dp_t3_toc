@@ -13,6 +13,7 @@ interface TocBuilderServiceInterface
      *
      * @param array<int>|null $allowedColPos
      * @param array<int>|null $excludedColPos
+     * @param bool            $useHeaderLink  Use header_link field if available
      *
      * @return array<int, TocItem>
      */
@@ -23,6 +24,27 @@ interface TocBuilderServiceInterface
         ?array $excludedColPos = null,
         int $maxDepth = 0,
         int $excludeUid = 0,
+        bool $useHeaderLink = false,
+    ): array;
+
+    /**
+     * Build TOC from multiple pages (with eager loading for performance).
+     *
+     * @param list<int>       $pageUids       List of page UIDs
+     * @param array<int>|null $allowedColPos
+     * @param array<int>|null $excludedColPos
+     * @param bool            $useHeaderLink  Use header_link field if available
+     *
+     * @return array<int, TocItem>
+     */
+    public function buildForPages(
+        array $pageUids,
+        string $mode = 'visibleHeaders',
+        ?array $allowedColPos = null,
+        ?array $excludedColPos = null,
+        int $maxDepth = 0,
+        int $excludeUid = 0,
+        bool $useHeaderLink = false,
     ): array;
 
     /**

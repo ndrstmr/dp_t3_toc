@@ -4,29 +4,19 @@
 
 <f:section name="Main">
 
-<f:comment>Load TOC JavaScript (for frame enhancement) and CSS</f:comment>
 <f:asset.css identifier="toc-sticky" href="EXT:dp_t3_toc/Resources/Public/Css/toc-sticky.css" />
 <f:asset.script identifier="toc-scrollspy" src="EXT:dp_t3_toc/Resources/Public/JavaScript/toc-scrollspy.js" />
 <f:if condition="{tocSettings.settings.scrollspy}">
     <f:asset.css identifier="toc-scrollspy" href="EXT:dp_t3_toc/Resources/Public/Css/toc-scrollspy.css" />
 </f:if>
 
-<f:comment>
-    Table of Contents Template
-    Supports Bootstrap 5, Kern UX, and WCAG 2.1 accessibility standards
-    Note: Header is rendered by Default Layout, not by this template
-</f:comment>
-
 <f:if condition="{tocItems}">
     <f:switch expression="{tocSettings.settings.layout}">
 
         <f:case value="sidebar">
-            <f:comment>Sidebar Layout: Navigation for sidebar</f:comment>
-            <f:comment>Note: sticky-top class and scrollspy data-attributes are added by TypoScript to the frame</f:comment>
-
             <nav id="toc-{data.uid}"
                  class="toc toc--sidebar"
-                 aria-label="{f:if(condition: data.header, then: data.header, else: 'Table of Contents')}"
+                 aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}"
                  data-toc-layout="sidebar"
                  data-toc-sticky="{tocSettings.settings.sticky}"
                  data-toc-scrollspy="{tocSettings.settings.scrollspy}"
@@ -47,10 +37,9 @@
         </f:case>
 
         <f:case value="inline">
-            <f:comment>Inline Layout: Horizontal navigation</f:comment>
             <nav id="toc-{data.uid}"
                  class="toc toc--inline"
-                 aria-label="{f:if(condition: data.header, then: data.header, else: 'Table of Contents')}">
+                 aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}">
 
                 <ul class="nav nav-pills toc__list">
                     <f:for each="{tocItems}" as="item">
@@ -66,10 +55,9 @@
         </f:case>
 
         <f:case value="dropdown">
-            <f:comment>Dropdown Layout: Mobile-friendly collapsible menu</f:comment>
             <nav id="toc-{data.uid}"
                  class="toc toc--dropdown"
-                 aria-label="{f:if(condition: data.header, then: data.header, else: 'Table of Contents')}">
+                 aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}">
 
                 <div class="dropdown">
                     <button class="btn btn-outline-primary dropdown-toggle toc__toggle"
@@ -79,7 +67,7 @@
                             aria-expanded="false">
                         <f:if condition="{data.header}">
                             <f:then>{data.header}</f:then>
-                            <f:else>Table of Contents</f:else>
+                            <f:else><f:translate key="toc.dropdown_label" extensionName="DpT3Toc" /></f:else>
                         </f:if>
                     </button>
 
@@ -98,10 +86,9 @@
         </f:case>
 
         <f:defaultCase>
-            <f:comment>Default: Sidebar layout</f:comment>
             <nav id="toc-{data.uid}"
                  class="toc toc--sidebar"
-                 aria-label="Table of Contents">
+                 aria-label="{f:translate(key: 'toc.aria_label', extensionName: 'DpT3Toc')}">
 
                 <ul class="nav flex-column toc__list">
                     <f:for each="{tocItems}" as="item">
@@ -117,26 +104,6 @@
 
     </f:switch>
 </f:if>
-
-<f:comment>
-    Accessibility Features:
-    - Semantic <nav> element with aria-label
-    - Proper heading hierarchy (header rendered by Default Layout)
-    - Keyboard navigation support (tabindex for scrollspy)
-    - ARIA expanded states for dropdown
-    - Descriptive link text
-
-    Bootstrap 5 Features:
-    - Scrollspy integration (data-bs-spy)
-    - Sticky positioning (.sticky-top)
-    - Responsive navigation (.nav, .nav-pills)
-    - Dropdown component
-
-    Kern UX Compatibility:
-    - Clean, minimal markup
-    - BEM-style CSS classes for easy theming
-    - Government-standard accessible patterns
-</f:comment>
 
 </f:section>
 

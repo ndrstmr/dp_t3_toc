@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+    <file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2025-10-31T12:00:00Z" product-name="dp_t3_toc">
+        <header/>
+        <body>
+            <!-- Frontend Labels -->
+            <trans-unit id="toc.aria_label">
+                <source>Table of Contents</source>
+                <target>Inhaltsverzeichnis</target>
+            </trans-unit>
+            <trans-unit id="toc.dropdown_label">
+                <source>Table of Contents</source>
+                <target>Inhaltsverzeichnis</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>

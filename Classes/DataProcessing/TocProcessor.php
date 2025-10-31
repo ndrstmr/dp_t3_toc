@@ -75,9 +75,13 @@ final readonly class TocProcessor implements DataProcessorInterface
             ? $this->asInt($flexFormSettings['maxDepth'])
             : $this->asInt('' !== $this->asString($tsMaxDepth) ? $tsMaxDepth : '0');
 
-        // Resolve page UID
+        // Use header_link as anchor: Site Setting (no FlexForm override)
+        $useHeaderLink = (bool) ($tocSettings['useHeaderLinkAsAnchor'] ?? false);
+
+        // Resolve page UIDs (supports CSV: "1,2,3")
         /** @var array<string, mixed> $processorConfiguration */
-        $pageUid = $this->resolvePageUid($cObj, $processorConfiguration);
+        /** @var array<string, mixed> $processedData */
+        $pageUids = $this->resolvePageUids($cObj, $processorConfiguration, $processedData);
 
         // Get current content element UID to exclude it from TOC
         $data = $this->asArray($processedData['data'] ?? null);
@@ -88,7 +92,8 @@ final readonly class TocProcessor implements DataProcessorInterface
         $excludedColPos = $this->normalizeColPosFilter($excludeColPos);
 
         // Build TOC using service (exclude current element)
-        $tocItems = $this->tocBuilder->buildForPage($pageUid, $mode, $allowedColPos, $excludedColPos, $maxDepth, $currentUid);
+        // Uses buildForPages() which supports multi-page and eager loading
+        $tocItems = $this->tocBuilder->buildForPages($pageUids, $mode, $allowedColPos, $excludedColPos, $maxDepth, $currentUid, $useHeaderLink);
 
         // Sort items
         $tocItems = $this->tocBuilder->sortItems($tocItems);
@@ -140,32 +145,73 @@ final readonly class TocProcessor implements DataProcessorInterface
     }
 
     /**
-     * Resolve the page UID from configuration or current page.
+     * Resolve page UIDs from configuration or current page with fallback chain.
+     *
+     * Supports:
+     * - Single UID: "42"
+     * - Multiple UIDs (CSV): "42,43,44"
+     * - Current page: "this" or ""
+     *
+     * Fallback chain for "this":
+     * 1. PSR-7 Request attribute 'frontend.page.information' (TYPO3 v13+, standard frontend)
+     * 2. Content element's 'pid' from $processedData['data']['pid'] (always available in DataProcessor)
      *
      * @param array<string, mixed> $processorConfiguration
+     * @param array<string, mixed> $processedData
+     *
+     * @return list<int> List of page UIDs (never empty, defaults to [0] on error)
      */
-    private function resolvePageUid(ContentObjectRenderer $cObj, array $processorConfiguration): int
+    private function resolvePageUids(ContentObjectRenderer $cObj, array $processorConfiguration, array $processedData): array
     {
-        // stdWrapValue returns mixed, casting to string is safe for comparison
-        $pageUid = (string) $cObj->stdWrapValue('pidInList', $processorConfiguration);
+        // stdWrapValue returns mixed, use TypeCastingTrait for safe conversion
+        $pidInListRaw = $cObj->stdWrapValue('pidInList', $processorConfiguration);
+        $pidInList = $this->asString($pidInListRaw);
 
-        if ('' === $pageUid || 'this' === $pageUid) {
-            // getRequest() returns ServerRequest (non-nullable)
+        // Handle "this" or empty string → use current page with fallback chain
+        if ('' === $pidInList || 'this' === $pidInList) {
+            // Fallback 1: PSR-7 Request attribute (modern, TYPO3 v13+)
             $request = $cObj->getRequest();
-
             $pageInformation = $request->getAttribute('frontend.page.information');
 
-            // This is the crucial check for PHPStan max level
-            if (!$pageInformation instanceof PageInformation) {
-                // Attribute is not set or has an unexpected type
-                return 0;
+            if ($pageInformation instanceof PageInformation) {
+                $currentPageUid = $pageInformation->getId();
+                if ($currentPageUid > 0) {
+                    return [$currentPageUid];
+                }
             }
 
-            // After this check, PHPStan knows $pageInformation is PageInformation
-            // PageInformation::getId() returns int|null
-            return $pageInformation->getId();
+            // Fallback 2: Content element's pid field (robust, always available in DataProcessor context)
+            $data = $this->asArray($processedData['data'] ?? null);
+            $contentElementPid = $this->asInt($data['pid'] ?? 0);
+            if ($contentElementPid > 0) {
+                return [$contentElementPid];
+            }
+
+            // All fallbacks failed: return [0] (will result in empty TOC)
+            // This should only happen in edge cases (e.g., CLI context without proper data)
+            return [0];
         }
 
-        return (int) $pageUid;
+        // Parse CSV: "42,43,44" → [42, 43, 44]
+        $parts = explode(',', $pidInList);
+
+        // Use TypeCastingTrait and filter out invalid values
+        $validUids = [];
+        foreach ($parts as $part) {
+            $trimmed = trim($part);
+            if ('' !== $trimmed) {
+                $uid = $this->asInt($trimmed);
+                if ($uid > 0) {
+                    $validUids[] = $uid;
+                }
+            }
+        }
+
+        // Fallback: If no valid UIDs found, return [0]
+        if ([] === $validUids) {
+            return [0];
+        }
+
+        return $validUids;
     }
 }

@@ -19,9 +19,29 @@ interface ContentElementRepositoryInterface
     public function findByPage(int $pageUid): array;
 
     /**
+     * Find all top-level content elements for multiple pages.
+     *
+     * @param list<int> $pageUids List of page UIDs
+     *
+     * @return array<int, array<string, mixed>> Array of tt_content rows
+     */
+    public function findByPages(array $pageUids): array;
+
+    /**
      * Find all children of a container element.
      *
      * @return array<int, array<string, mixed>> Array of tt_content rows
      */
     public function findContainerChildren(int $parentUid): array;
+
+    /**
+     * Find all container children for all elements on given pages (eager loading).
+     *
+     * This prevents N+1 query problems by loading all container children in a single query.
+     *
+     * @param list<int> $pageUids List of page UIDs
+     *
+     * @return array<int, array<string, mixed>> Array of tt_content rows with tx_container_parent set
+     */
+    public function findAllContainerChildrenForPages(array $pageUids): array;
 }
