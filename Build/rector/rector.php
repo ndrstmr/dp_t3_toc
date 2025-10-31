@@ -37,6 +37,8 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         __DIR__ . '/../../.Build',
+        // Skip deprecated rule from typo3-rector (loaded by UP_TO_TYPO3_13 set)
+        \Rector\Transform\Rector\Assign\PropertyFetchToMethodCallRector::class,
     ])
     ->withConfiguredRule(
         ExtEmConfRector::class,
