@@ -81,7 +81,8 @@
       "@check:composer:normalize",
       "@check:php:lint",
       "@check:php:cs",
-      "@check:php:stan"
+      "@check:php:stan",
+      "@check:php:rector"
     ],
     "check:composer:normalize": "@composer normalize --no-check-lock --dry-run",
     "check:php:cs": "php-cs-fixer fix --dry-run --diff --config=Build/php-cs-fixer/.php-cs-fixer.php",
