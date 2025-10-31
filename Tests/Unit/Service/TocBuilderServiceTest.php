@@ -330,4 +330,97 @@ final class TocBuilderServiceTest extends TestCase
         static::assertEquals('Header 1', $toc[0]->title);
         static::assertEquals('Header 2', $toc[1]->title);
     }
+
+    /**
+     * Test default anchor generation (useHeaderLink=false).
+     *
+     * Default behavior: Always use #c{uid} format, regardless of header_link field.
+     */
+    public function testBuildForPageWithDefaultAnchorGeneration(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Header 1', 'header_link' => 'custom-anchor', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Header 2', 'header_link' => '', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        // Default: useHeaderLink=false
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', null, null, 0, 0, false);
+
+        static::assertCount(2, $toc);
+        // Both should use #c{uid} format (default behavior)
+        static::assertEquals('#c1', $toc[0]->anchor);
+        static::assertEquals('#c2', $toc[1]->anchor);
+    }
+
+    /**
+     * Test configurable anchor generation with header_link field (useHeaderLink=true).
+     *
+     * When enabled:
+     * - Uses header_link field value if available
+     * - Falls back to #c{uid} if header_link is empty
+     */
+    public function testBuildForPageWithHeaderLinkAnchorGeneration(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Header with Link', 'header_link' => 'custom-anchor', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Header without Link', 'header_link' => '', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 3, 'header' => 'Header with Whitespace Link', 'header_link' => '  ', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        // Enable header_link usage
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', null, null, 0, 0, true);
+
+        static::assertCount(3, $toc);
+
+        // Element with header_link should use custom anchor
+        static::assertEquals('#custom-anchor', $toc[0]->anchor);
+        static::assertEquals('Header with Link', $toc[0]->title);
+
+        // Element without header_link should fall back to #c{uid}
+        static::assertEquals('#c2', $toc[1]->anchor);
+        static::assertEquals('Header without Link', $toc[1]->title);
+
+        // Element with whitespace-only header_link should fall back to #c{uid}
+        static::assertEquals('#c3', $toc[2]->anchor);
+        static::assertEquals('Header with Whitespace Link', $toc[2]->title);
+    }
+
+    /**
+     * Test that header_link anchor works with nested containers.
+     *
+     * Container children should inherit the useHeaderLink setting.
+     */
+    public function testBuildForPageWithHeaderLinkInContainerChildren(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 20, 'header' => 'Container', 'header_link' => 'container-anchor', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'container_2col', 'header_layout' => 0],
+        ]);
+
+        // Container children with mixed header_link availability
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([
+            ['uid' => 21, 'header' => 'Child with Link', 'header_link' => 'child-anchor', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 20],
+            ['uid' => 22, 'header' => 'Child without Link', 'header_link' => '', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 200, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 20],
+        ]);
+
+        $this->mockContainerCheck->method('isContainer')
+            ->willReturnCallback(static fn (string $ctype): bool => 'container_2col' === $ctype);
+
+        // Enable header_link usage
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', null, null, 0, 0, true);
+
+        static::assertCount(3, $toc);
+
+        // Container uses custom anchor
+        static::assertEquals('#container-anchor', $toc[0]->anchor);
+
+        // Child with header_link uses custom anchor
+        static::assertEquals('#child-anchor', $toc[1]->anchor);
+
+        // Child without header_link falls back to #c{uid}
+        static::assertEquals('#c22', $toc[2]->anchor);
+    }
 }

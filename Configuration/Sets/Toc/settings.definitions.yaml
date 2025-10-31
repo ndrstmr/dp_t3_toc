@@ -66,3 +66,10 @@ settings:
     description: 'Maximum depth for nested containers (0 = unlimited)'
     type: int
     default: 0
+
+  dp_t3_toc.useHeaderLinkAsAnchor:
+    category: dp_t3_toc
+    label: 'Use header_link Field as Anchor'
+    description: 'If enabled, uses the header_link field value as anchor if available, otherwise falls back to #c{uid}'
+    type: bool
+    default: false

@@ -75,6 +75,9 @@ final readonly class TocProcessor implements DataProcessorInterface
             ? $this->asInt($flexFormSettings['maxDepth'])
             : $this->asInt('' !== $this->asString($tsMaxDepth) ? $tsMaxDepth : '0');
 
+        // Use header_link as anchor: Site Setting (no FlexForm override)
+        $useHeaderLink = (bool) ($tocSettings['useHeaderLinkAsAnchor'] ?? false);
+
         // Resolve page UIDs (supports CSV: "1,2,3")
         /** @var array<string, mixed> $processorConfiguration */
         /** @var array<string, mixed> $processedData */
@@ -90,7 +93,7 @@ final readonly class TocProcessor implements DataProcessorInterface
 
         // Build TOC using service (exclude current element)
         // Uses buildForPages() which supports multi-page and eager loading
-        $tocItems = $this->tocBuilder->buildForPages($pageUids, $mode, $allowedColPos, $excludedColPos, $maxDepth, $currentUid);
+        $tocItems = $this->tocBuilder->buildForPages($pageUids, $mode, $allowedColPos, $excludedColPos, $maxDepth, $currentUid, $useHeaderLink);
 
         // Sort items
         $tocItems = $this->tocBuilder->sortItems($tocItems);

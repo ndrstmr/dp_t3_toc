@@ -43,6 +43,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
      * @param array<int>|null $excludedColPos Excluded column positions (null = none)
      * @param int             $maxDepth       Maximum nesting depth (0 = unlimited)
      * @param int             $excludeUid     UID of content element to exclude (usually the TOC element itself)
+     * @param bool            $useHeaderLink  Use header_link field if available (default: false)
      *
      * @return array<int, TocItem>
      */
@@ -53,9 +54,10 @@ final class TocBuilderService implements TocBuilderServiceInterface
         ?array $excludedColPos = null,
         int $maxDepth = 0,
         int $excludeUid = 0,
+        bool $useHeaderLink = false,
     ): array {
         // Delegate to buildForPages with single page
-        return $this->buildForPages([$pageUid], $mode, $allowedColPos, $excludedColPos, $maxDepth, $excludeUid);
+        return $this->buildForPages([$pageUid], $mode, $allowedColPos, $excludedColPos, $maxDepth, $excludeUid, $useHeaderLink);
     }
 
     /**
@@ -67,6 +69,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
      * @param array<int>|null $excludedColPos Excluded column positions (null = none)
      * @param int             $maxDepth       Maximum nesting depth (0 = unlimited)
      * @param int             $excludeUid     UID of content element to exclude (usually the TOC element itself)
+     * @param bool            $useHeaderLink  Use header_link field if available (default: false)
      *
      * @return array<int, TocItem>
      */
@@ -77,6 +80,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
         ?array $excludedColPos = null,
         int $maxDepth = 0,
         int $excludeUid = 0,
+        bool $useHeaderLink = false,
     ): array {
         // Reset state for new TOC building
         $this->childrenByParent = [];
@@ -125,7 +129,8 @@ final class TocBuilderService implements TocBuilderServiceInterface
                     $initialPath,
                     $allowedColPos,
                     $excludedColPos,
-                    $excludeUid
+                    $excludeUid,
+                    $useHeaderLink
                 );
 
                 // Merge the results into the main TOC array
@@ -149,6 +154,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
      * @param array<int>|null            $allowedColPos  Allowed column positions
      * @param array<int>|null            $excludedColPos Excluded column positions
      * @param int                        $excludeUid     UID to exclude
+     * @param bool                       $useHeaderLink  Use header_link field as anchor if available
      *
      * @return array<int, TocItem> A list of TocItem objects
      */
@@ -161,6 +167,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
         ?array $allowedColPos = null,
         ?array $excludedColPos = null,
         int $excludeUid = 0,
+        bool $useHeaderLink = false,
     ): array {
         $collectedItems = [];
         $uid = $this->asInt($row['uid'] ?? 0);
@@ -168,10 +175,16 @@ final class TocBuilderService implements TocBuilderServiceInterface
 
         // 1. Add current element to TOC if it's a valid candidate
         if ($this->isCandidate($row, $mode)) {
+            // Auto-anchor generation: Use header_link if enabled and available
+            $headerLink = trim($this->asString($row['header_link'] ?? ''));
+            $anchor = ($useHeaderLink && '' !== $headerLink)
+                ? '#'.$headerLink
+                : '#c'.$uid;
+
             $collectedItems[] = new TocItem(
                 data: $row,
                 title: $this->asString($row['header'] ?? ''),
-                anchor: '#c'.$uid,
+                anchor: $anchor,
                 level: $level,
                 path: $path
             );
@@ -220,7 +233,8 @@ final class TocBuilderService implements TocBuilderServiceInterface
                     $newPath,
                     $allowedColPos,
                     $excludedColPos,
-                    $excludeUid
+                    $excludeUid,
+                    $useHeaderLink
                 );
 
                 // Merge results efficiently
