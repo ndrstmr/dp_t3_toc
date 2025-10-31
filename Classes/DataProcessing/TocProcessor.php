@@ -75,9 +75,9 @@ final readonly class TocProcessor implements DataProcessorInterface
             ? $this->asInt($flexFormSettings['maxDepth'])
             : $this->asInt('' !== $this->asString($tsMaxDepth) ? $tsMaxDepth : '0');
 
-        // Resolve page UID
+        // Resolve page UIDs (supports CSV: "1,2,3")
         /** @var array<string, mixed> $processorConfiguration */
-        $pageUid = $this->resolvePageUid($cObj, $processorConfiguration);
+        $pageUids = $this->resolvePageUids($cObj, $processorConfiguration);
 
         // Get current content element UID to exclude it from TOC
         $data = $this->asArray($processedData['data'] ?? null);
@@ -88,7 +88,8 @@ final readonly class TocProcessor implements DataProcessorInterface
         $excludedColPos = $this->normalizeColPosFilter($excludeColPos);
 
         // Build TOC using service (exclude current element)
-        $tocItems = $this->tocBuilder->buildForPage($pageUid, $mode, $allowedColPos, $excludedColPos, $maxDepth, $currentUid);
+        // Uses buildForPages() which supports multi-page and eager loading
+        $tocItems = $this->tocBuilder->buildForPages($pageUids, $mode, $allowedColPos, $excludedColPos, $maxDepth, $currentUid);
 
         // Sort items
         $tocItems = $this->tocBuilder->sortItems($tocItems);
@@ -140,32 +141,60 @@ final readonly class TocProcessor implements DataProcessorInterface
     }
 
     /**
-     * Resolve the page UID from configuration or current page.
+     * Resolve page UIDs from configuration or current page.
+     *
+     * Supports:
+     * - Single UID: "42"
+     * - Multiple UIDs (CSV): "42,43,44"
+     * - Current page: "this" or ""
      *
      * @param array<string, mixed> $processorConfiguration
+     *
+     * @return list<int> List of page UIDs (never empty, defaults to [0] on error)
      */
-    private function resolvePageUid(ContentObjectRenderer $cObj, array $processorConfiguration): int
+    private function resolvePageUids(ContentObjectRenderer $cObj, array $processorConfiguration): array
     {
-        // stdWrapValue returns mixed, casting to string is safe for comparison
-        $pageUid = (string) $cObj->stdWrapValue('pidInList', $processorConfiguration);
+        // stdWrapValue returns mixed, use TypeCastingTrait for safe conversion
+        $pidInListRaw = $cObj->stdWrapValue('pidInList', $processorConfiguration);
+        $pidInList = $this->asString($pidInListRaw);
 
-        if ('' === $pageUid || 'this' === $pageUid) {
-            // getRequest() returns ServerRequest (non-nullable)
+        // Handle "this" or empty string → use current page
+        if ('' === $pidInList || 'this' === $pidInList) {
             $request = $cObj->getRequest();
-
             $pageInformation = $request->getAttribute('frontend.page.information');
 
-            // This is the crucial check for PHPStan max level
+            // PHPStan max level: Explicit type check
             if (!$pageInformation instanceof PageInformation) {
                 // Attribute is not set or has an unexpected type
-                return 0;
+                return [0];
             }
 
-            // After this check, PHPStan knows $pageInformation is PageInformation
-            // PageInformation::getId() returns int|null
-            return $pageInformation->getId();
+            // PageInformation::getId() returns int
+            $currentPageUid = $pageInformation->getId();
+
+            return [$currentPageUid];
         }
 
-        return (int) $pageUid;
+        // Parse CSV: "42,43,44" → [42, 43, 44]
+        $parts = explode(',', $pidInList);
+
+        // Use TypeCastingTrait and filter out invalid values
+        $validUids = [];
+        foreach ($parts as $part) {
+            $trimmed = trim($part);
+            if ('' !== $trimmed) {
+                $uid = $this->asInt($trimmed);
+                if ($uid > 0) {
+                    $validUids[] = $uid;
+                }
+            }
+        }
+
+        // Fallback: If no valid UIDs found, return [0]
+        if ([] === $validUids) {
+            return [0];
+        }
+
+        return $validUids;
     }
 }

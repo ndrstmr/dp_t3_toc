@@ -26,6 +26,24 @@ interface TocBuilderServiceInterface
     ): array;
 
     /**
+     * Build TOC from multiple pages (with eager loading for performance).
+     *
+     * @param list<int>       $pageUids       List of page UIDs
+     * @param array<int>|null $allowedColPos
+     * @param array<int>|null $excludedColPos
+     *
+     * @return array<int, TocItem>
+     */
+    public function buildForPages(
+        array $pageUids,
+        string $mode = 'visibleHeaders',
+        ?array $allowedColPos = null,
+        ?array $excludedColPos = null,
+        int $maxDepth = 0,
+        int $excludeUid = 0,
+    ): array;
+
+    /**
      * Sort TOC items by colPos and sorting.
      *
      * @param array<int, TocItem> $items

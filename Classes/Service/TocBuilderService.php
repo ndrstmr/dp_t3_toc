@@ -11,15 +11,27 @@ use Ndrstmr\DpT3Toc\Utility\TypeCastingTrait;
 /**
  * Service for building Table of Contents from content elements.
  *
- * Handles container-aware recursive traversal and filtering logic
+ * Handles container-aware recursive traversal and filtering logic.
+ *
+ * Note: This class is NOT readonly to allow internal state management
+ * for eager-loaded container children (prevents N+1 queries).
  */
-final readonly class TocBuilderService implements TocBuilderServiceInterface
+final class TocBuilderService implements TocBuilderServiceInterface
 {
     use TypeCastingTrait;
 
+    /**
+     * Eager-loaded container children grouped by parent UID.
+     *
+     * Format: ['parentUid' => [child1, child2, ...]]
+     *
+     * @var array<int, list<array<string, mixed>>>
+     */
+    private array $childrenByParent = [];
+
     public function __construct(
-        private ContentElementRepositoryInterface $repository,
-        private TcaContainerCheckServiceInterface $containerCheckService,
+        private readonly ContentElementRepositoryInterface $repository,
+        private readonly TcaContainerCheckServiceInterface $containerCheckService,
     ) {
     }
 
@@ -42,7 +54,53 @@ final readonly class TocBuilderService implements TocBuilderServiceInterface
         int $maxDepth = 0,
         int $excludeUid = 0,
     ): array {
-        $contentElements = $this->repository->findByPage($pageUid);
+        // Delegate to buildForPages with single page
+        return $this->buildForPages([$pageUid], $mode, $allowedColPos, $excludedColPos, $maxDepth, $excludeUid);
+    }
+
+    /**
+     * Build TOC from multiple pages (solves N+1 query problem with eager loading).
+     *
+     * @param list<int>       $pageUids       List of page UIDs
+     * @param string          $mode           Filter mode: sectionIndexOnly|visibleHeaders|all
+     * @param array<int>|null $allowedColPos  Allowed column positions (null = all)
+     * @param array<int>|null $excludedColPos Excluded column positions (null = none)
+     * @param int             $maxDepth       Maximum nesting depth (0 = unlimited)
+     * @param int             $excludeUid     UID of content element to exclude (usually the TOC element itself)
+     *
+     * @return array<int, TocItem>
+     */
+    public function buildForPages(
+        array $pageUids,
+        string $mode = 'visibleHeaders',
+        ?array $allowedColPos = null,
+        ?array $excludedColPos = null,
+        int $maxDepth = 0,
+        int $excludeUid = 0,
+    ): array {
+        // Reset state for new TOC building
+        $this->childrenByParent = [];
+
+        // Early return for empty input
+        if ([] === $pageUids) {
+            return [];
+        }
+
+        // 1. Load all top-level elements from all pages (1 query)
+        $contentElements = $this->repository->findByPages($pageUids);
+
+        // 2. Eager-load ALL container children at once (1 query, prevents N+1 problem!)
+        $allChildren = $this->repository->findAllContainerChildrenForPages($pageUids);
+
+        // 3. Group children by parent UID for O(1) lookup during recursion
+        foreach ($allChildren as $child) {
+            $parentUid = $this->asInt($child['tx_container_parent'] ?? 0);
+            if ($parentUid > 0) {
+                $this->childrenByParent[$parentUid][] = $child;
+            }
+        }
+
+        // 4. Process all elements recursively (using in-memory children)
         $toc = [];
 
         // Define initial parameters for clarity (avoids "Magic Numbers")
@@ -58,7 +116,7 @@ final readonly class TocBuilderService implements TocBuilderServiceInterface
 
             // Check colPos *before* descending into recursion
             if ($this->isColPosAllowed($element, $allowedColPos, $excludedColPos)) {
-                // 1. Call the "pure function" and receive the returned array
+                // Call the recursive function
                 $collectedItems = $this->collectRecursive(
                     $element,
                     $mode,
@@ -70,10 +128,8 @@ final readonly class TocBuilderService implements TocBuilderServiceInterface
                     $excludeUid
                 );
 
-                // 2. Merge the results into the main TOC array
+                // Merge the results into the main TOC array
                 if ([] !== $collectedItems) {
-                    // Use array_push with spread operator (PHP 7.4+)
-                    // This is more efficient in a loop than array_merge
                     array_push($toc, ...$collectedItems);
                 }
             }
@@ -141,7 +197,9 @@ final readonly class TocBuilderService implements TocBuilderServiceInterface
                 'sorting' => $this->asInt($row['sorting'] ?? 0),
             ]];
 
-            $children = $this->repository->findContainerChildren($uid);
+            // Use eager-loaded children (no DB query!) - solves N+1 problem
+            // Default to empty array if no children exist for this parent
+            $children = $this->childrenByParent[$uid] ?? [];
 
             foreach ($children as $child) {
                 // Skip excluded UID
@@ -166,8 +224,6 @@ final readonly class TocBuilderService implements TocBuilderServiceInterface
 
                     // 4. Merge results efficiently
                     if ([] !== $childItems) {
-                        // Use array_push with spread operator (PHP 8.1+)
-                        // This is more efficient in a loop than array_merge
                         array_push($collectedItems, ...$childItems);
                     }
                 }
