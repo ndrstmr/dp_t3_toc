@@ -208,24 +208,24 @@ final class TocBuilderService implements TocBuilderServiceInterface
                     continue;
                 }
 
-                // Check if child's colPos is allowed
-                if ($this->isColPosAllowed($child, $allowedColPos, $excludedColPos)) {
-                    // Recursive call, returns an array (list<TocItem>)
-                    $childItems = $this->collectRecursive(
-                        $child,
-                        $mode,
-                        $maxDepth,
-                        $level + 1, // Correct, simple level increment
-                        $newPath,
-                        $allowedColPos,
-                        $excludedColPos,
-                        $excludeUid
-                    );
+                // Container children inherit the parent's colPos visibility
+                // Their internal colPos values (200, 201, etc.) are b13/container
+                // implementation details and should NOT be filtered.
+                // The parent container was already checked by isColPosAllowed().
+                $childItems = $this->collectRecursive(
+                    $child,
+                    $mode,
+                    $maxDepth,
+                    $level + 1,
+                    $newPath,
+                    $allowedColPos,
+                    $excludedColPos,
+                    $excludeUid
+                );
 
-                    // 4. Merge results efficiently
-                    if ([] !== $childItems) {
-                        array_push($collectedItems, ...$childItems);
-                    }
+                // Merge results efficiently
+                if ([] !== $childItems) {
+                    array_push($collectedItems, ...$childItems);
                 }
             }
         }

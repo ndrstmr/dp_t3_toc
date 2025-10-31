@@ -146,6 +146,48 @@ final class TocBuilderServiceTest extends TestCase
         static::assertEquals('ColPos 2', $toc[1]->title);
     }
 
+    /**
+     * Test that container children inherit parent's colPos visibility.
+     *
+     * Scenario: Container in colPos=0, children have internal colPos=200,201.
+     * Filter: includeColPos=[0]
+     * Expected: Container + all children are included (children inherit parent visibility).
+     *
+     * This test verifies the fix for the critical bug where container children
+     * were incorrectly filtered out by their internal colPos values.
+     */
+    public function testContainerChildrenInheritParentColPosVisibility(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 100, 'header' => 'Container in ColPos 0', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'container_2col', 'header_layout' => 0],
+            ['uid' => 200, 'header' => 'Element in ColPos 1 (excluded)', 'colPos' => 1, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+
+        // Container children with internal colPos values (200, 201)
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([
+            ['uid' => 101, 'header' => 'Child 1 (internal colPos=200)', 'colPos' => 200, 'sectionIndex' => 1, 'sorting' => 100, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 100],
+            ['uid' => 102, 'header' => 'Child 2 (internal colPos=201)', 'colPos' => 201, 'sectionIndex' => 1, 'sorting' => 200, 'CType' => 'text', 'header_layout' => 0, 'tx_container_parent' => 100],
+        ]);
+
+        $this->mockContainerCheck->method('isContainer')
+            ->willReturnCallback(static fn (string $ctype): bool => 'container_2col' === $ctype);
+
+        // Filter: Only allow colPos=0
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', [0]);
+
+        // Expected: Container header + both children (inherit parent's visibility)
+        // NOT expected: Element in ColPos 1
+        static::assertCount(3, $toc);
+        static::assertEquals('Container in ColPos 0', $toc[0]->title);
+        static::assertEquals('Child 1 (internal colPos=200)', $toc[1]->title);
+        static::assertEquals('Child 2 (internal colPos=201)', $toc[2]->title);
+
+        // Verify children have correct path to parent
+        static::assertNotEmpty($toc[1]->path);
+        static::assertEquals(100, $toc[1]->path[0]['uid']);
+        static::assertEquals(0, $toc[1]->path[0]['colPos']); // Parent's colPos, not child's internal value
+    }
+
     public function testBuildForPageWithBothAllowedAndExcluded(): void
     {
         $this->mockRepo->method('findByPages')->willReturn([
