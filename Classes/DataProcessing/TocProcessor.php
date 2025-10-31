@@ -77,7 +77,8 @@ final readonly class TocProcessor implements DataProcessorInterface
 
         // Resolve page UIDs (supports CSV: "1,2,3")
         /** @var array<string, mixed> $processorConfiguration */
-        $pageUids = $this->resolvePageUids($cObj, $processorConfiguration);
+        /** @var array<string, mixed> $processedData */
+        $pageUids = $this->resolvePageUids($cObj, $processorConfiguration, $processedData);
 
         // Get current content element UID to exclude it from TOC
         $data = $this->asArray($processedData['data'] ?? null);
@@ -141,38 +142,51 @@ final readonly class TocProcessor implements DataProcessorInterface
     }
 
     /**
-     * Resolve page UIDs from configuration or current page.
+     * Resolve page UIDs from configuration or current page with fallback chain.
      *
      * Supports:
      * - Single UID: "42"
      * - Multiple UIDs (CSV): "42,43,44"
      * - Current page: "this" or ""
      *
+     * Fallback chain for "this":
+     * 1. PSR-7 Request attribute 'frontend.page.information' (TYPO3 v13+, standard frontend)
+     * 2. Content element's 'pid' from $processedData['data']['pid'] (always available in DataProcessor)
+     *
      * @param array<string, mixed> $processorConfiguration
+     * @param array<string, mixed> $processedData
      *
      * @return list<int> List of page UIDs (never empty, defaults to [0] on error)
      */
-    private function resolvePageUids(ContentObjectRenderer $cObj, array $processorConfiguration): array
+    private function resolvePageUids(ContentObjectRenderer $cObj, array $processorConfiguration, array $processedData): array
     {
         // stdWrapValue returns mixed, use TypeCastingTrait for safe conversion
         $pidInListRaw = $cObj->stdWrapValue('pidInList', $processorConfiguration);
         $pidInList = $this->asString($pidInListRaw);
 
-        // Handle "this" or empty string → use current page
+        // Handle "this" or empty string → use current page with fallback chain
         if ('' === $pidInList || 'this' === $pidInList) {
+            // Fallback 1: PSR-7 Request attribute (modern, TYPO3 v13+)
             $request = $cObj->getRequest();
             $pageInformation = $request->getAttribute('frontend.page.information');
 
-            // PHPStan max level: Explicit type check
-            if (!$pageInformation instanceof PageInformation) {
-                // Attribute is not set or has an unexpected type
-                return [0];
+            if ($pageInformation instanceof PageInformation) {
+                $currentPageUid = $pageInformation->getId();
+                if ($currentPageUid > 0) {
+                    return [$currentPageUid];
+                }
             }
 
-            // PageInformation::getId() returns int
-            $currentPageUid = $pageInformation->getId();
+            // Fallback 2: Content element's pid field (robust, always available in DataProcessor context)
+            $data = $this->asArray($processedData['data'] ?? null);
+            $contentElementPid = $this->asInt($data['pid'] ?? 0);
+            if ($contentElementPid > 0) {
+                return [$contentElementPid];
+            }
 
-            return [$currentPageUid];
+            // All fallbacks failed: return [0] (will result in empty TOC)
+            // This should only happen in edge cases (e.g., CLI context without proper data)
+            return [0];
         }
 
         // Parse CSV: "42,43,44" → [42, 43, 44]

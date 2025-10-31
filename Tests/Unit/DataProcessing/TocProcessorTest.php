@@ -93,10 +93,22 @@ final class TocProcessorTest extends TestCase
             ['maxDepth', static::anything(), '99'], // TS Fallback
         ]);
 
+        // Mock fallback chain for pidInList='this'
+        // Provide processedData with data.pid for Fallback 2
+        $processedData = [
+            'tocSettings' => [
+                'settings' => [
+                    'mode' => 'ffMode',
+                    'maxDepth' => 5,
+                ],
+            ],
+            'data' => ['pid' => 42],
+        ];
+
         $this->mockService
             ->expects(static::once())
             ->method('buildForPages')
-            ->with([0], 'ffMode', null, null, 5, 0)
+            ->with([42], 'ffMode', null, null, 5, 0)
             ->willReturn([]);
         $this->mockService->method('sortItems')->willReturn([]);
 
@@ -104,14 +116,7 @@ final class TocProcessorTest extends TestCase
             $this->mockCObj,
             [],
             ['mode' => 'tsMode', 'maxDepth' => '99'],
-            [
-                'tocSettings' => [
-                    'settings' => [
-                        'mode' => 'ffMode',
-                        'maxDepth' => 5,
-                    ],
-                ],
-            ]
+            $processedData
         );
     }
 
@@ -125,10 +130,13 @@ final class TocProcessorTest extends TestCase
             ['maxDepth', static::anything(), null],
         ]);
 
+        // Mock fallback chain for pidInList='this'
+        // Fallback 2: data.pid will be used (no PageInformation, but processedData exists)
+
         $this->mockService
             ->expects(static::once())
             ->method('buildForPages')
-            ->with([0], 'visibleHeaders', null, null, 0, 999)
+            ->with([50], 'visibleHeaders', null, null, 0, 999)
             ->willReturn([]);
         $this->mockService->method('sortItems')->willReturn([]);
 
@@ -136,7 +144,7 @@ final class TocProcessorTest extends TestCase
             $this->mockCObj,
             [],
             [],
-            ['data' => ['uid' => 999]]
+            ['data' => ['uid' => 999, 'pid' => 50]]
         );
     }
 
@@ -150,10 +158,13 @@ final class TocProcessorTest extends TestCase
             ['maxDepth', static::anything(), '0'],
         ]);
 
+        // Mock fallback chain for pidInList='this'
+        // Fallback 2: data.pid (no PageInformation)
+
         $this->mockService
             ->expects(static::once())
             ->method('buildForPages')
-            ->with([0], 'visibleHeaders', null, null, 0, 0)
+            ->with([100], 'visibleHeaders', null, null, 0, 0)
             ->willReturn([]);
         $this->mockService->method('sortItems')->willReturn([]);
 
@@ -161,7 +172,7 @@ final class TocProcessorTest extends TestCase
             $this->mockCObj,
             [],
             ['maxDepth' => '0'], // TS-Config
-            []
+            ['data' => ['pid' => 100]]
         );
     }
 
@@ -302,7 +313,66 @@ final class TocProcessorTest extends TestCase
             }
         );
 
-        // Empty pidInList should result in [0] as fallback (no PageInformation in mock)
+        // Mock fallback chain for empty pidInList
+        // Fallback 2: data.pid (no PageInformation)
+
+        $this->mockService
+            ->expects(static::once())
+            ->method('buildForPages')
+            ->with([77], 'visibleHeaders', null, null, 0, 0)
+            ->willReturn([]);
+
+        $this->mockService->method('sortItems')->willReturn([]);
+
+        $this->processor->process($this->mockCObj, [], [], ['data' => ['pid' => 77]]);
+    }
+
+    /**
+     * Test the fallback chain for resolving current page UID.
+     *
+     * Fallback order:
+     * 1. PageInformation (not available in unit tests)
+     * 2. $processedData['data']['pid'] (tested here)
+     */
+    public function testResolvePageUidFallbackChain(): void
+    {
+        $this->mockCObj->method('stdWrapValue')->willReturnCallback(
+            fn (string $key) => match ($key) {
+                'pidInList' => 'this',
+                default => null,
+            }
+        );
+
+        // Fallback 2 should be used: data.pid = 88
+        $this->mockService
+            ->expects(static::once())
+            ->method('buildForPages')
+            ->with([88], 'visibleHeaders', null, null, 0, 0)
+            ->willReturn([]);
+
+        $this->mockService->method('sortItems')->willReturn([]);
+
+        $this->processor->process(
+            $this->mockCObj,
+            [],
+            [],
+            ['data' => ['pid' => 88]]
+        );
+    }
+
+    /**
+     * Test that all fallbacks fail gracefully.
+     */
+    public function testResolvePageUidReturnsZeroWhenAllFallbacksFail(): void
+    {
+        $this->mockCObj->method('stdWrapValue')->willReturnCallback(
+            fn (string $key) => match ($key) {
+                'pidInList' => 'this',
+                default => null,
+            }
+        );
+
+        // No PageInformation, no data.pid → should return [0]
         $this->mockService
             ->expects(static::once())
             ->method('buildForPages')
@@ -311,6 +381,11 @@ final class TocProcessorTest extends TestCase
 
         $this->mockService->method('sortItems')->willReturn([]);
 
-        $this->processor->process($this->mockCObj, [], [], []);
+        $this->processor->process(
+            $this->mockCObj,
+            [],
+            [],
+            [] // No data
+        );
     }
 }
