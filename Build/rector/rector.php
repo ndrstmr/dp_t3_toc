@@ -37,8 +37,6 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         __DIR__ . '/../../.Build',
-        // Skip deprecated rule globally
-        \Rector\Transform\Rector\Assign\PropertyFetchToMethodCallRector::class,
     ])
     ->withConfiguredRule(
         ExtEmConfRector::class,
