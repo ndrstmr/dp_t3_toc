@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Ndrstmr\DpT3Toc\Service;
 
+use Ndrstmr\DpT3Toc\Domain\Model\TocConfiguration;
 use Ndrstmr\DpT3Toc\Domain\Model\TocItem;
 use Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepositoryInterface;
+use Ndrstmr\DpT3Toc\Event\AfterTocItemsBuiltEvent;
+use Ndrstmr\DpT3Toc\Event\BeforeTocItemsBuiltEvent;
+use Ndrstmr\DpT3Toc\Event\TocItemFilterEvent;
 use Ndrstmr\DpT3Toc\Utility\TypeCastingTrait;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -42,11 +47,60 @@ final class TocBuilderService implements TocBuilderServiceInterface
         private readonly ContentElementRepositoryInterface $repository,
         private readonly TcaContainerCheckServiceInterface $containerCheckService,
         private readonly LoggerInterface $logger,
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly TocItemMapper $tocItemMapper,
     ) {
     }
 
     /**
+     * Build TOC from page content with configuration object.
+     *
+     * @return array<int, TocItem>
+     */
+    public function buildForPageWithConfig(int $pageUid, TocConfiguration $config): array
+    {
+        return $this->buildForPagesWithConfig([$pageUid], $config);
+    }
+
+    /**
+     * Build TOC from multiple pages with configuration object (preferred method).
+     *
+     * @param list<int> $pageUids List of page UIDs
+     *
+     * @return array<int, TocItem>
+     */
+    public function buildForPagesWithConfig(array $pageUids, TocConfiguration $config): array
+    {
+        // Dispatch BeforeTocItemsBuiltEvent (allows config modification)
+        $beforeEvent = new BeforeTocItemsBuiltEvent($pageUids, $config);
+        $this->eventDispatcher->dispatch($beforeEvent);
+
+        // Use potentially modified config from event
+        $pageUids = $beforeEvent->getPageUids();
+        $config = $beforeEvent->getConfig();
+
+        // Build TOC items
+        $items = $this->buildForPages(
+            $pageUids,
+            $config->mode,
+            $config->allowedColPos,
+            $config->excludedColPos,
+            $config->maxDepth,
+            $config->excludeUid,
+            $config->useHeaderLink
+        );
+
+        // Dispatch AfterTocItemsBuiltEvent (allows final modification)
+        $afterEvent = new AfterTocItemsBuiltEvent($pageUids, $config, $items);
+        $this->eventDispatcher->dispatch($afterEvent);
+
+        return $afterEvent->getItems();
+    }
+
+    /**
      * Build TOC from page content.
+     *
+     * @deprecated Use buildForPageWithConfig() instead. Will be removed in v5.0.
      *
      * @param string          $mode           Filter mode: sectionIndexOnly|visibleHeaders|all
      * @param array<int>|null $allowedColPos  Allowed column positions (null = all)
@@ -72,6 +126,8 @@ final class TocBuilderService implements TocBuilderServiceInterface
 
     /**
      * Build TOC from multiple pages (solves N+1 query problem with eager loading).
+     *
+     * @deprecated Use buildForPagesWithConfig() instead. Will be removed in v5.0.
      *
      * @param list<int>       $pageUids       List of page UIDs
      * @param string          $mode           Filter mode: sectionIndexOnly|visibleHeaders|all
@@ -195,19 +251,17 @@ final class TocBuilderService implements TocBuilderServiceInterface
 
         // 1. Add current element to TOC if it's a valid candidate
         if ($this->isCandidate($row, $mode)) {
-            // Auto-anchor generation: Use header_link if enabled and available
-            $headerLink = trim($this->asString($row['header_link'] ?? ''));
-            $anchor = ($useHeaderLink && '' !== $headerLink)
-                ? $this->sanitizeAnchor($headerLink, $uid)
-                : '#c'.$uid;
+            // Use TocItemMapper for domain model creation (Single Responsibility)
+            $item = $this->tocItemMapper->mapFromRow($row, $level, $path, $useHeaderLink);
 
-            $collectedItems[] = new TocItem(
-                data: $row,
-                title: $this->asString($row['header'] ?? ''),
-                anchor: $anchor,
-                level: $level,
-                path: $path
-            );
+            // Dispatch TocItemFilterEvent (allows filtering/modification per item)
+            $filterEvent = new TocItemFilterEvent($item, $row);
+            $this->eventDispatcher->dispatch($filterEvent);
+
+            // Add item to collection if not skipped
+            if (!$filterEvent->isSkipped()) {
+                $collectedItems[] = $filterEvent->getItem();
+            }
         }
 
         $isContainer = $this->containerCheckService->isContainer($ctype);
@@ -272,29 +326,6 @@ final class TocBuilderService implements TocBuilderServiceInterface
         }
 
         return $collectedItems; // Return the collected items for this branch
-    }
-
-    /**
-     * Sanitize and validate anchor string from header_link field.
-     *
-     * Validates against regex ^[a-zA-Z0-9_-]+$ to prevent XSS attacks.
-     * Falls back to #c{uid} if validation fails.
-     *
-     * @param string $headerLink User-provided anchor from header_link field
-     * @param int    $uid        Content element UID for fallback
-     *
-     * @return string Validated anchor with # prefix, or fallback #c{uid}
-     */
-    private function sanitizeAnchor(string $headerLink, int $uid): string
-    {
-        // Validate: Only allow alphanumeric, underscore, and hyphen
-        // This prevents XSS attacks via malicious anchor strings
-        if (1 === preg_match('/^[a-zA-Z0-9_-]+$/', $headerLink)) {
-            return '#'.$headerLink;
-        }
-
-        // Invalid anchor: fall back to default #c{uid} format
-        return '#c'.$uid;
     }
 
     /**
