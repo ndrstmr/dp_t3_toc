@@ -7,6 +7,7 @@ namespace Ndrstmr\DpT3Toc\DataProcessing;
 use Ndrstmr\DpT3Toc\Domain\Model\TocItem;
 use Ndrstmr\DpT3Toc\Service\TocBuilderServiceInterface;
 use Ndrstmr\DpT3Toc\Utility\TypeCastingTrait;
+use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\CMS\Frontend\ContentObject\DataProcessorInterface;
 use TYPO3\CMS\Frontend\Page\PageInformation;
@@ -27,6 +28,7 @@ final readonly class TocProcessor implements DataProcessorInterface
 
     public function __construct(
         private TocBuilderServiceInterface $tocBuilder,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -83,6 +85,14 @@ final readonly class TocProcessor implements DataProcessorInterface
         /** @var array<string, mixed> $processedData */
         $pageUids = $this->resolvePageUids($cObj, $processorConfiguration, $processedData);
 
+        // Log invalid/empty page UIDs
+        if ([] === $pageUids || [0] === $pageUids) {
+            $this->logger->warning('TOC: No valid page UIDs resolved', [
+                'pidInList' => $processorConfiguration['pidInList'] ?? 'not set',
+                'fallbackAttempted' => true,
+            ]);
+        }
+
         // Get current content element UID to exclude it from TOC
         $data = $this->asArray($processedData['data'] ?? null);
         $currentUid = $this->asInt($data['uid'] ?? 0);
@@ -91,12 +101,41 @@ final readonly class TocProcessor implements DataProcessorInterface
         $allowedColPos = $this->normalizeColPosFilter($includeColPos);
         $excludedColPos = $this->normalizeColPosFilter($excludeColPos);
 
+        // Log configuration (debug level)
+        $this->logger->debug('TOC: Building table of contents', [
+            'pageUids' => $pageUids,
+            'mode' => $mode,
+            'allowedColPos' => $allowedColPos,
+            'excludedColPos' => $excludedColPos,
+            'maxDepth' => $maxDepth,
+            'excludeUid' => $currentUid,
+            'useHeaderLink' => $useHeaderLink,
+        ]);
+
         // Build TOC using service (exclude current element)
         // Uses buildForPages() which supports multi-page and eager loading
         $tocItems = $this->tocBuilder->buildForPages($pageUids, $mode, $allowedColPos, $excludedColPos, $maxDepth, $currentUid, $useHeaderLink);
 
+        // Log empty results (info level - not an error, but worth knowing)
+        if ([] === $tocItems) {
+            $this->logger->info('TOC: No items found', [
+                'pageUids' => $pageUids,
+                'mode' => $mode,
+                'filters' => [
+                    'allowedColPos' => $allowedColPos,
+                    'excludedColPos' => $excludedColPos,
+                ],
+            ]);
+        }
+
         // Sort items
         $tocItems = $this->tocBuilder->sortItems($tocItems);
+
+        // Log successful build (debug level)
+        $this->logger->debug('TOC: Successfully built', [
+            'itemCount' => count($tocItems),
+            'pageUids' => $pageUids,
+        ]);
 
         // Transform to Fluid-compatible array format
         $processedData[$as] = array_map(

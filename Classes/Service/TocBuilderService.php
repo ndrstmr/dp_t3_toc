@@ -7,6 +7,7 @@ namespace Ndrstmr\DpT3Toc\Service;
 use Ndrstmr\DpT3Toc\Domain\Model\TocItem;
 use Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepositoryInterface;
 use Ndrstmr\DpT3Toc\Utility\TypeCastingTrait;
+use Psr\Log\LoggerInterface;
 
 /**
  * Service for building Table of Contents from content elements.
@@ -21,6 +22,14 @@ final class TocBuilderService implements TocBuilderServiceInterface
     use TypeCastingTrait;
 
     /**
+     * TYPO3 header_layout value for hidden headers.
+     *
+     * Headers with this layout value are considered hidden and excluded
+     * from TOC in 'visibleHeaders' mode (default behavior).
+     */
+    private const int HEADER_LAYOUT_HIDDEN = 100;
+
+    /**
      * Eager-loaded container children grouped by parent UID.
      *
      * Format: ['parentUid' => [child1, child2, ...]]
@@ -32,6 +41,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
     public function __construct(
         private readonly ContentElementRepositoryInterface $repository,
         private readonly TcaContainerCheckServiceInterface $containerCheckService,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -93,8 +103,18 @@ final class TocBuilderService implements TocBuilderServiceInterface
         // 1. Load all top-level elements from all pages (1 query)
         $contentElements = $this->repository->findByPages($pageUids);
 
+        $this->logger->debug('TOC Service: Loaded top-level content elements', [
+            'pageUids' => $pageUids,
+            'elementCount' => count($contentElements),
+        ]);
+
         // 2. Eager-load ALL container children at once (1 query, prevents N+1 problem!)
         $allChildren = $this->repository->findAllContainerChildrenForPages($pageUids);
+
+        $this->logger->debug('TOC Service: Eager-loaded container children', [
+            'pageUids' => $pageUids,
+            'childrenCount' => count($allChildren),
+        ]);
 
         // 3. Group children by parent UID for O(1) lookup during recursion
         foreach ($allChildren as $child) {
@@ -178,7 +198,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
             // Auto-anchor generation: Use header_link if enabled and available
             $headerLink = trim($this->asString($row['header_link'] ?? ''));
             $anchor = ($useHeaderLink && '' !== $headerLink)
-                ? '#'.$headerLink
+                ? $this->sanitizeAnchor($headerLink, $uid)
                 : '#c'.$uid;
 
             $collectedItems[] = new TocItem(
@@ -197,6 +217,13 @@ final class TocBuilderService implements TocBuilderServiceInterface
         // 2. Guard Clause: Stop recursion if maxDepth is set AND we've already reached it.
         //    (We only stop *descending*, the current item (above) is still added)
         if ($isContainer && $maxDepth > 0 && $level >= $maxDepth) {
+            $this->logger->debug('TOC Service: Max depth reached, stopping recursion', [
+                'uid' => $uid,
+                'ctype' => $ctype,
+                'currentLevel' => $level,
+                'maxDepth' => $maxDepth,
+            ]);
+
             return $collectedItems; // Stop descending
         }
 
@@ -248,6 +275,29 @@ final class TocBuilderService implements TocBuilderServiceInterface
     }
 
     /**
+     * Sanitize and validate anchor string from header_link field.
+     *
+     * Validates against regex ^[a-zA-Z0-9_-]+$ to prevent XSS attacks.
+     * Falls back to #c{uid} if validation fails.
+     *
+     * @param string $headerLink User-provided anchor from header_link field
+     * @param int    $uid        Content element UID for fallback
+     *
+     * @return string Validated anchor with # prefix, or fallback #c{uid}
+     */
+    private function sanitizeAnchor(string $headerLink, int $uid): string
+    {
+        // Validate: Only allow alphanumeric, underscore, and hyphen
+        // This prevents XSS attacks via malicious anchor strings
+        if (1 === preg_match('/^[a-zA-Z0-9_-]+$/', $headerLink)) {
+            return '#'.$headerLink;
+        }
+
+        // Invalid anchor: fall back to default #c{uid} format
+        return '#c'.$uid;
+    }
+
+    /**
      * Check if content element is a valid TOC candidate based on mode.
      *
      * @param array<string, mixed> $row  Content element data
@@ -256,14 +306,14 @@ final class TocBuilderService implements TocBuilderServiceInterface
     private function isCandidate(array $row, string $mode): bool
     {
         $header = trim($this->asString($row['header'] ?? ''));
-        $headerLayout = $this->asInt($row['header_layout'] ?? 0); // 100 == hidden
+        $headerLayout = $this->asInt($row['header_layout'] ?? 0);
         $sectionIndex = $this->asInt($row['sectionIndex'] ?? 0);
 
         return match ($mode) {
             'sectionIndexOnly' => 1 === $sectionIndex && '' !== $header,
-            'visibleHeaders' => '' !== $header && 100 !== $headerLayout,
+            'visibleHeaders' => '' !== $header && self::HEADER_LAYOUT_HIDDEN !== $headerLayout,
             'all' => '' !== $header,
-            default => '' !== $header && 100 !== $headerLayout,
+            default => '' !== $header && self::HEADER_LAYOUT_HIDDEN !== $headerLayout,
         };
     }
 
