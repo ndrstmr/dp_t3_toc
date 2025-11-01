@@ -10,6 +10,7 @@ use Ndrstmr\DpT3Toc\Service\TocBuilderServiceInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 final class TocProcessorTest extends TestCase
@@ -22,11 +23,15 @@ final class TocProcessorTest extends TestCase
     /** @var MockObject&ContentObjectRenderer */
     private $mockCObj;
 
+    /** @var MockObject&LoggerInterface */
+    private $mockLogger;
+
     protected function setUp(): void
     {
         $this->mockService = $this->createMock(TocBuilderServiceInterface::class);
         $this->mockCObj = $this->createMock(ContentObjectRenderer::class);
-        $this->processor = new TocProcessor($this->mockService);
+        $this->mockLogger = $this->createMock(LoggerInterface::class);
+        $this->processor = new TocProcessor($this->mockService, $this->mockLogger);
     }
 
     public function testProcessCallsServiceAndTransformsResult(): void

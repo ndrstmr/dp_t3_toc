@@ -9,19 +9,22 @@ use Ndrstmr\DpT3Toc\Service\TcaContainerCheckServiceInterface;
 use Ndrstmr\DpT3Toc\Service\TocBuilderService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 final class TocBuilderServiceTest extends TestCase
 {
     private TocBuilderService $service;
     private MockObject&ContentElementRepositoryInterface $mockRepo;
     private MockObject&TcaContainerCheckServiceInterface $mockContainerCheck;
+    private MockObject&LoggerInterface $mockLogger;
 
     protected function setUp(): void
     {
         $this->mockRepo = $this->createMock(ContentElementRepositoryInterface::class);
         $this->mockContainerCheck = $this->createMock(TcaContainerCheckServiceInterface::class);
+        $this->mockLogger = $this->createMock(LoggerInterface::class);
 
-        $this->service = new TocBuilderService($this->mockRepo, $this->mockContainerCheck);
+        $this->service = new TocBuilderService($this->mockRepo, $this->mockContainerCheck, $this->mockLogger);
     }
 
     public function testBuildForPageWithSectionIndexMode(): void
@@ -422,5 +425,89 @@ final class TocBuilderServiceTest extends TestCase
 
         // Child without header_link falls back to #c{uid}
         static::assertEquals('#c22', $toc[2]->anchor);
+    }
+
+    /**
+     * Test anchor sanitization against XSS attacks.
+     *
+     * Security: header_link field must be validated to prevent XSS.
+     * Only alphanumeric, underscore, and hyphen are allowed.
+     * Invalid characters should trigger fallback to #c{uid}.
+     */
+    public function testAnchorSanitizationPreventXSS(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            // XSS attempt: JavaScript injection
+            ['uid' => 1, 'header' => 'XSS Test 1', 'header_link' => '"><script>alert("xss")</script>', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            // XSS attempt: Event handler
+            ['uid' => 2, 'header' => 'XSS Test 2', 'header_link' => '" onload="alert(1)"', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+            // XSS attempt: HTML injection
+            ['uid' => 3, 'header' => 'XSS Test 3', 'header_link' => '<img src=x onerror=alert(1)>', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
+            // Special characters (not XSS but invalid)
+            ['uid' => 4, 'header' => 'Special Chars', 'header_link' => 'anchor!@#$%^&*()', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 1024, 'CType' => 'text', 'header_layout' => 0],
+            // Valid anchor (control)
+            ['uid' => 5, 'header' => 'Valid Anchor', 'header_link' => 'valid_anchor-123', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 1280, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        // Enable header_link usage
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', null, null, 0, 0, true);
+
+        static::assertCount(5, $toc);
+
+        // All XSS attempts should fall back to #c{uid}
+        static::assertEquals('#c1', $toc[0]->anchor, 'JavaScript injection should be rejected');
+        static::assertEquals('#c2', $toc[1]->anchor, 'Event handler should be rejected');
+        static::assertEquals('#c3', $toc[2]->anchor, 'HTML injection should be rejected');
+        static::assertEquals('#c4', $toc[3]->anchor, 'Special characters should be rejected');
+
+        // Valid anchor should pass validation
+        static::assertEquals('#valid_anchor-123', $toc[4]->anchor, 'Valid anchor should be accepted');
+    }
+
+    /**
+     * Test edge cases for anchor sanitization.
+     *
+     * Tests boundary conditions and edge cases for the validation regex.
+     */
+    public function testAnchorSanitizationEdgeCases(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            // Empty after trim (already handled, but verify)
+            ['uid' => 1, 'header' => 'Empty Link', 'header_link' => '   ', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            // Only numbers (valid)
+            ['uid' => 2, 'header' => 'Numbers Only', 'header_link' => '12345', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+            // Only letters (valid)
+            ['uid' => 3, 'header' => 'Letters Only', 'header_link' => 'abcXYZ', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
+            // Only underscores and hyphens (valid)
+            ['uid' => 4, 'header' => 'Separators', 'header_link' => '_-_-', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 1024, 'CType' => 'text', 'header_layout' => 0],
+            // Space in anchor (invalid)
+            ['uid' => 5, 'header' => 'With Space', 'header_link' => 'anchor with space', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 1280, 'CType' => 'text', 'header_layout' => 0],
+            // Dot/period (invalid - not in whitelist)
+            ['uid' => 6, 'header' => 'With Dot', 'header_link' => 'anchor.section', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 1536, 'CType' => 'text', 'header_layout' => 0],
+            // Unicode characters (invalid)
+            ['uid' => 7, 'header' => 'Unicode', 'header_link' => 'anchör-ümläüt', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 1792, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        // Enable header_link usage
+        $toc = $this->service->buildForPage(1, 'sectionIndexOnly', null, null, 0, 0, true);
+
+        static::assertCount(7, $toc);
+
+        // Empty/whitespace should fall back
+        static::assertEquals('#c1', $toc[0]->anchor);
+
+        // Valid formats should pass
+        static::assertEquals('#12345', $toc[1]->anchor);
+        static::assertEquals('#abcXYZ', $toc[2]->anchor);
+        static::assertEquals('#_-_-', $toc[3]->anchor);
+
+        // Invalid formats should fall back
+        static::assertEquals('#c5', $toc[4]->anchor, 'Space should be rejected');
+        static::assertEquals('#c6', $toc[5]->anchor, 'Dot should be rejected');
+        static::assertEquals('#c7', $toc[6]->anchor, 'Unicode should be rejected');
     }
 }
