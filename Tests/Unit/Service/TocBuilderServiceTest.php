@@ -6,10 +6,14 @@ namespace Ndrstmr\DpT3Toc\Tests\Unit\Service;
 
 use Ndrstmr\DpT3Toc\Domain\Model\TocConfiguration;
 use Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepositoryInterface;
+use Ndrstmr\DpT3Toc\Event\AfterTocItemsBuiltEvent;
+use Ndrstmr\DpT3Toc\Event\BeforeTocItemsBuiltEvent;
+use Ndrstmr\DpT3Toc\Event\TocItemFilterEvent;
 use Ndrstmr\DpT3Toc\Service\TcaContainerCheckServiceInterface;
 use Ndrstmr\DpT3Toc\Service\TocBuilderService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
 final class TocBuilderServiceTest extends TestCase
@@ -18,14 +22,21 @@ final class TocBuilderServiceTest extends TestCase
     private MockObject&ContentElementRepositoryInterface $mockRepo;
     private MockObject&TcaContainerCheckServiceInterface $mockContainerCheck;
     private MockObject&LoggerInterface $mockLogger;
+    private MockObject&EventDispatcherInterface $mockEventDispatcher;
 
     protected function setUp(): void
     {
         $this->mockRepo = $this->createMock(ContentElementRepositoryInterface::class);
         $this->mockContainerCheck = $this->createMock(TcaContainerCheckServiceInterface::class);
         $this->mockLogger = $this->createMock(LoggerInterface::class);
+        $this->mockEventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
-        $this->service = new TocBuilderService($this->mockRepo, $this->mockContainerCheck, $this->mockLogger);
+        $this->service = new TocBuilderService(
+            $this->mockRepo,
+            $this->mockContainerCheck,
+            $this->mockLogger,
+            $this->mockEventDispatcher
+        );
     }
 
     public function testBuildForPageWithSectionIndexMode(): void
@@ -593,5 +604,170 @@ final class TocBuilderServiceTest extends TestCase
 
         static::assertCount(1, $toc);
         static::assertEquals('Header', $toc[0]->title);
+    }
+
+    /**
+     * Test that BeforeTocItemsBuiltEvent is dispatched.
+     *
+     * Verifies PSR-14 event dispatching before TOC building starts.
+     */
+    public function testBeforeTocItemsBuiltEventIsDispatched(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+
+        $config = new TocConfiguration(mode: 'sectionIndexOnly');
+
+        // Expect 2 events: Before + After (no items, so no TocItemFilterEvent)
+        $dispatchCount = 0;
+        $this->mockEventDispatcher->expects(static::exactly(2))
+            ->method('dispatch')
+            ->willReturnCallback(static function (object $event) use (&$dispatchCount): object {
+                ++$dispatchCount;
+                if (1 === $dispatchCount) {
+                    static::assertInstanceOf(BeforeTocItemsBuiltEvent::class, $event, 'First event should be BeforeTocItemsBuiltEvent');
+                } elseif (2 === $dispatchCount) {
+                    static::assertInstanceOf(AfterTocItemsBuiltEvent::class, $event, 'Second event should be AfterTocItemsBuiltEvent');
+                }
+
+                return $event;
+            });
+
+        $this->service->buildForPagesWithConfig([1], $config);
+    }
+
+    /**
+     * Test that AfterTocItemsBuiltEvent is dispatched.
+     *
+     * Verifies PSR-14 event dispatching after TOC is built.
+     */
+    public function testAfterTocItemsBuiltEventIsDispatched(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Header', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        $config = new TocConfiguration(mode: 'sectionIndexOnly');
+
+        // Expect 3 events: Before + TocItemFilter + After
+        $dispatchCount = 0;
+        $this->mockEventDispatcher->expects(static::exactly(3))
+            ->method('dispatch')
+            ->willReturnCallback(static function (object $event) use (&$dispatchCount): object {
+                ++$dispatchCount;
+                if (1 === $dispatchCount) {
+                    static::assertInstanceOf(BeforeTocItemsBuiltEvent::class, $event, 'First event should be BeforeTocItemsBuiltEvent');
+                } elseif (2 === $dispatchCount) {
+                    static::assertInstanceOf(TocItemFilterEvent::class, $event, 'Second event should be TocItemFilterEvent');
+                } elseif (3 === $dispatchCount) {
+                    static::assertInstanceOf(AfterTocItemsBuiltEvent::class, $event, 'Third event should be AfterTocItemsBuiltEvent');
+                }
+
+                return $event;
+            });
+
+        $this->service->buildForPagesWithConfig([1], $config);
+    }
+
+    /**
+     * Test that TocItemFilterEvent is dispatched for each TOC item.
+     *
+     * Verifies PSR-14 event dispatching for individual item filtering.
+     */
+    public function testTocItemFilterEventIsDispatchedPerItem(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Header 1', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Header 2', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        $config = new TocConfiguration(mode: 'sectionIndexOnly');
+
+        // Expect 4 events: Before + 2x TocItemFilter + After
+        $this->mockEventDispatcher->expects(static::exactly(4))
+            ->method('dispatch')
+            ->willReturnCallback(static function (object $event): object {
+                static::assertTrue(
+                    $event instanceof BeforeTocItemsBuiltEvent
+                    || $event instanceof TocItemFilterEvent
+                    || $event instanceof AfterTocItemsBuiltEvent,
+                    'Expected one of the TOC events'
+                );
+
+                return $event;
+            });
+
+        $this->service->buildForPagesWithConfig([1], $config);
+    }
+
+    /**
+     * Test that TocItemFilterEvent can skip items.
+     *
+     * Verifies that marking an item as skipped removes it from the final TOC.
+     */
+    public function testTocItemFilterEventCanSkipItems(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Keep This', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Skip This', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        $config = new TocConfiguration(mode: 'sectionIndexOnly');
+
+        // Skip items with title "Skip This"
+        $this->mockEventDispatcher->method('dispatch')
+            ->willReturnCallback(static function (object $event): object {
+                if ($event instanceof TocItemFilterEvent && 'Skip This' === $event->getItem()->title) {
+                    $event->skip();
+                }
+
+                return $event;
+            });
+
+        $toc = $this->service->buildForPagesWithConfig([1], $config);
+
+        static::assertCount(1, $toc);
+        static::assertEquals('Keep This', $toc[0]->title);
+    }
+
+    /**
+     * Test that BeforeTocItemsBuiltEvent can modify configuration.
+     *
+     * Verifies that event listeners can change the TOC configuration dynamically.
+     */
+    public function testBeforeTocItemsBuiltEventCanModifyConfig(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Header 1', 'colPos' => 0, 'sectionIndex' => 0, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Header 2', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        // Start with 'visibleHeaders' mode
+        $config = new TocConfiguration(mode: 'visibleHeaders');
+
+        // Event listener changes mode to 'sectionIndexOnly'
+        $this->mockEventDispatcher->method('dispatch')
+            ->willReturnCallback(static function (object $event): object {
+                if ($event instanceof BeforeTocItemsBuiltEvent) {
+                    $newConfig = new TocConfiguration(mode: 'sectionIndexOnly');
+                    $event->setConfig($newConfig);
+                }
+
+                return $event;
+            });
+
+        $toc = $this->service->buildForPagesWithConfig([1], $config);
+
+        // Should only get 1 item (Header 2) because mode was changed to sectionIndexOnly
+        static::assertCount(1, $toc);
+        static::assertEquals('Header 2', $toc[0]->title);
     }
 }

@@ -7,7 +7,11 @@ namespace Ndrstmr\DpT3Toc\Service;
 use Ndrstmr\DpT3Toc\Domain\Model\TocConfiguration;
 use Ndrstmr\DpT3Toc\Domain\Model\TocItem;
 use Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepositoryInterface;
+use Ndrstmr\DpT3Toc\Event\AfterTocItemsBuiltEvent;
+use Ndrstmr\DpT3Toc\Event\BeforeTocItemsBuiltEvent;
+use Ndrstmr\DpT3Toc\Event\TocItemFilterEvent;
 use Ndrstmr\DpT3Toc\Utility\TypeCastingTrait;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -43,6 +47,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
         private readonly ContentElementRepositoryInterface $repository,
         private readonly TcaContainerCheckServiceInterface $containerCheckService,
         private readonly LoggerInterface $logger,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -65,7 +70,16 @@ final class TocBuilderService implements TocBuilderServiceInterface
      */
     public function buildForPagesWithConfig(array $pageUids, TocConfiguration $config): array
     {
-        return $this->buildForPages(
+        // Dispatch BeforeTocItemsBuiltEvent (allows config modification)
+        $beforeEvent = new BeforeTocItemsBuiltEvent($pageUids, $config);
+        $this->eventDispatcher->dispatch($beforeEvent);
+
+        // Use potentially modified config from event
+        $pageUids = $beforeEvent->getPageUids();
+        $config = $beforeEvent->getConfig();
+
+        // Build TOC items
+        $items = $this->buildForPages(
             $pageUids,
             $config->mode,
             $config->allowedColPos,
@@ -74,6 +88,12 @@ final class TocBuilderService implements TocBuilderServiceInterface
             $config->excludeUid,
             $config->useHeaderLink
         );
+
+        // Dispatch AfterTocItemsBuiltEvent (allows final modification)
+        $afterEvent = new AfterTocItemsBuiltEvent($pageUids, $config, $items);
+        $this->eventDispatcher->dispatch($afterEvent);
+
+        return $afterEvent->getItems();
     }
 
     /**
@@ -236,13 +256,22 @@ final class TocBuilderService implements TocBuilderServiceInterface
                 ? $this->sanitizeAnchor($headerLink, $uid)
                 : '#c'.$uid;
 
-            $collectedItems[] = new TocItem(
+            $item = new TocItem(
                 data: $row,
                 title: $this->asString($row['header'] ?? ''),
                 anchor: $anchor,
                 level: $level,
                 path: $path
             );
+
+            // Dispatch TocItemFilterEvent (allows filtering/modification per item)
+            $filterEvent = new TocItemFilterEvent($item, $row);
+            $this->eventDispatcher->dispatch($filterEvent);
+
+            // Add item to collection if not skipped
+            if (!$filterEvent->isSkipped()) {
+                $collectedItems[] = $filterEvent->getItem();
+            }
         }
 
         $isContainer = $this->containerCheckService->isContainer($ctype);
