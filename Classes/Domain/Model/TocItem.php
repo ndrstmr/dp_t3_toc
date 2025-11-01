@@ -14,6 +14,14 @@ final readonly class TocItem
     use TypeCastingTrait;
 
     /**
+     * Threshold for container colPos values (b13/container uses >= 200).
+     *
+     * Elements with colPos >= this value are container children and inherit
+     * their parent container's colPos for sorting purposes.
+     */
+    private const CONTAINER_COLPOS_THRESHOLD = 200;
+
+    /**
      * @param array<string, mixed>       $data Original tt_content row data
      * @param list<array<string, mixed>> $path Breadcrumb path from parent containers
      */
@@ -33,8 +41,8 @@ final readonly class TocItem
     {
         $colPos = $this->asInt($this->data['colPos'] ?? 0);
 
-        // Container children (colPos >= 200): use parent's colPos
-        if ($colPos >= 200 && [] !== $this->path) {
+        // Container children (colPos >= threshold): use parent's colPos
+        if ($colPos >= self::CONTAINER_COLPOS_THRESHOLD && [] !== $this->path) {
             $lastKey = array_key_last($this->path);
 
             $parent = $this->path[$lastKey];
