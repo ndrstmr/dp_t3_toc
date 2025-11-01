@@ -4,12 +4,31 @@ declare(strict_types=1);
 
 namespace Ndrstmr\DpT3Toc\Service;
 
+use Ndrstmr\DpT3Toc\Domain\Model\TocConfiguration;
 use Ndrstmr\DpT3Toc\Domain\Model\TocItem;
 
 interface TocBuilderServiceInterface
 {
     /**
+     * Build TOC from page content with configuration object.
+     *
+     * @return array<int, TocItem>
+     */
+    public function buildForPageWithConfig(int $pageUid, TocConfiguration $config): array;
+
+    /**
+     * Build TOC from multiple pages with configuration object (preferred method).
+     *
+     * @param list<int> $pageUids List of page UIDs
+     *
+     * @return array<int, TocItem>
+     */
+    public function buildForPagesWithConfig(array $pageUids, TocConfiguration $config): array;
+
+    /**
      * Build TOC from page content.
+     *
+     * @deprecated Use buildForPageWithConfig() instead. Will be removed in v5.0.
      *
      * @param array<int>|null $allowedColPos
      * @param array<int>|null $excludedColPos
@@ -29,6 +48,8 @@ interface TocBuilderServiceInterface
 
     /**
      * Build TOC from multiple pages (with eager loading for performance).
+     *
+     * @deprecated Use buildForPagesWithConfig() instead. Will be removed in v5.0.
      *
      * @param list<int>       $pageUids       List of page UIDs
      * @param array<int>|null $allowedColPos

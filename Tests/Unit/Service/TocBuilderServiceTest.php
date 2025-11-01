@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ndrstmr\DpT3Toc\Tests\Unit\Service;
 
+use Ndrstmr\DpT3Toc\Domain\Model\TocConfiguration;
 use Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepositoryInterface;
 use Ndrstmr\DpT3Toc\Service\TcaContainerCheckServiceInterface;
 use Ndrstmr\DpT3Toc\Service\TocBuilderService;
@@ -509,5 +510,88 @@ final class TocBuilderServiceTest extends TestCase
         static::assertEquals('#c5', $toc[4]->anchor, 'Space should be rejected');
         static::assertEquals('#c6', $toc[5]->anchor, 'Dot should be rejected');
         static::assertEquals('#c7', $toc[6]->anchor, 'Unicode should be rejected');
+    }
+
+    /**
+     * Test new configuration-based method buildForPageWithConfig().
+     *
+     * Verifies that TocConfiguration Value Object works correctly.
+     */
+    public function testBuildForPageWithConfig(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Header 1', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Header 2', 'colPos' => 1, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 3, 'header' => 'Header 3', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 768, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        $config = new TocConfiguration(
+            mode: 'sectionIndexOnly',
+            allowedColPos: [0],
+            excludedColPos: null,
+            maxDepth: 0,
+            excludeUid: 0,
+            useHeaderLink: false
+        );
+
+        $toc = $this->service->buildForPageWithConfig(1, $config);
+
+        static::assertCount(2, $toc);
+        static::assertEquals('Header 1', $toc[0]->title);
+        static::assertEquals('Header 3', $toc[1]->title);
+    }
+
+    /**
+     * Test configuration-based method buildForPagesWithConfig().
+     *
+     * Verifies multi-page TOC building with Value Object.
+     */
+    public function testBuildForPagesWithConfig(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Page 1 Header', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+            ['uid' => 2, 'header' => 'Page 2 Header', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 512, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        $config = new TocConfiguration(
+            mode: 'sectionIndexOnly'
+        );
+
+        $toc = $this->service->buildForPagesWithConfig([1, 2], $config);
+
+        static::assertCount(2, $toc);
+        static::assertEquals('Page 1 Header', $toc[0]->title);
+        static::assertEquals('Page 2 Header', $toc[1]->title);
+    }
+
+    /**
+     * Test TocConfiguration::fromArray() factory method.
+     *
+     * Ensures backward compatibility when migrating from array configs.
+     */
+    public function testTocConfigurationFromArray(): void
+    {
+        $this->mockRepo->method('findByPages')->willReturn([
+            ['uid' => 1, 'header' => 'Header', 'colPos' => 0, 'sectionIndex' => 1, 'sorting' => 256, 'CType' => 'text', 'header_layout' => 0],
+        ]);
+        $this->mockRepo->method('findAllContainerChildrenForPages')->willReturn([]);
+        $this->mockContainerCheck->method('isContainer')->willReturn(false);
+
+        $config = TocConfiguration::fromArray([
+            'mode' => 'sectionIndexOnly',
+            'allowedColPos' => [0],
+            'maxDepth' => 2,
+            'excludeUid' => 99,
+            'useHeaderLink' => true,
+        ]);
+
+        $toc = $this->service->buildForPageWithConfig(1, $config);
+
+        static::assertCount(1, $toc);
+        static::assertEquals('Header', $toc[0]->title);
     }
 }

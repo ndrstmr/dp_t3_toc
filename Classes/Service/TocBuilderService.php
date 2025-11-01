@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ndrstmr\DpT3Toc\Service;
 
+use Ndrstmr\DpT3Toc\Domain\Model\TocConfiguration;
 use Ndrstmr\DpT3Toc\Domain\Model\TocItem;
 use Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepositoryInterface;
 use Ndrstmr\DpT3Toc\Utility\TypeCastingTrait;
@@ -46,7 +47,39 @@ final class TocBuilderService implements TocBuilderServiceInterface
     }
 
     /**
+     * Build TOC from page content with configuration object.
+     *
+     * @return array<int, TocItem>
+     */
+    public function buildForPageWithConfig(int $pageUid, TocConfiguration $config): array
+    {
+        return $this->buildForPagesWithConfig([$pageUid], $config);
+    }
+
+    /**
+     * Build TOC from multiple pages with configuration object (preferred method).
+     *
+     * @param list<int> $pageUids List of page UIDs
+     *
+     * @return array<int, TocItem>
+     */
+    public function buildForPagesWithConfig(array $pageUids, TocConfiguration $config): array
+    {
+        return $this->buildForPages(
+            $pageUids,
+            $config->mode,
+            $config->allowedColPos,
+            $config->excludedColPos,
+            $config->maxDepth,
+            $config->excludeUid,
+            $config->useHeaderLink
+        );
+    }
+
+    /**
      * Build TOC from page content.
+     *
+     * @deprecated Use buildForPageWithConfig() instead. Will be removed in v5.0.
      *
      * @param string          $mode           Filter mode: sectionIndexOnly|visibleHeaders|all
      * @param array<int>|null $allowedColPos  Allowed column positions (null = all)
@@ -72,6 +105,8 @@ final class TocBuilderService implements TocBuilderServiceInterface
 
     /**
      * Build TOC from multiple pages (solves N+1 query problem with eager loading).
+     *
+     * @deprecated Use buildForPagesWithConfig() instead. Will be removed in v5.0.
      *
      * @param list<int>       $pageUids       List of page UIDs
      * @param string          $mode           Filter mode: sectionIndexOnly|visibleHeaders|all
