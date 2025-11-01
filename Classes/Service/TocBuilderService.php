@@ -27,7 +27,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
      * Headers with this layout value are considered hidden and excluded
      * from TOC in 'visibleHeaders' mode (default behavior).
      */
-    private const HEADER_LAYOUT_HIDDEN = 100;
+    private const int HEADER_LAYOUT_HIDDEN = 100;
 
     /**
      * Eager-loaded container children grouped by parent UID.

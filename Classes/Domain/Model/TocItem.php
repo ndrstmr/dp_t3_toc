@@ -19,7 +19,7 @@ final readonly class TocItem
      * Elements with colPos >= this value are container children and inherit
      * their parent container's colPos for sorting purposes.
      */
-    private const CONTAINER_COLPOS_THRESHOLD = 200;
+    private const int CONTAINER_COLPOS_THRESHOLD = 200;
 
     /**
      * @param array<string, mixed>       $data Original tt_content row data
