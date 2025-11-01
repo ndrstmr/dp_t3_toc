@@ -48,6 +48,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
         private readonly TcaContainerCheckServiceInterface $containerCheckService,
         private readonly LoggerInterface $logger,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly TocItemMapper $tocItemMapper,
     ) {
     }
 
@@ -250,19 +251,8 @@ final class TocBuilderService implements TocBuilderServiceInterface
 
         // 1. Add current element to TOC if it's a valid candidate
         if ($this->isCandidate($row, $mode)) {
-            // Auto-anchor generation: Use header_link if enabled and available
-            $headerLink = trim($this->asString($row['header_link'] ?? ''));
-            $anchor = ($useHeaderLink && '' !== $headerLink)
-                ? $this->sanitizeAnchor($headerLink, $uid)
-                : '#c'.$uid;
-
-            $item = new TocItem(
-                data: $row,
-                title: $this->asString($row['header'] ?? ''),
-                anchor: $anchor,
-                level: $level,
-                path: $path
-            );
+            // Use TocItemMapper for domain model creation (Single Responsibility)
+            $item = $this->tocItemMapper->mapFromRow($row, $level, $path, $useHeaderLink);
 
             // Dispatch TocItemFilterEvent (allows filtering/modification per item)
             $filterEvent = new TocItemFilterEvent($item, $row);
@@ -336,29 +326,6 @@ final class TocBuilderService implements TocBuilderServiceInterface
         }
 
         return $collectedItems; // Return the collected items for this branch
-    }
-
-    /**
-     * Sanitize and validate anchor string from header_link field.
-     *
-     * Validates against regex ^[a-zA-Z0-9_-]+$ to prevent XSS attacks.
-     * Falls back to #c{uid} if validation fails.
-     *
-     * @param string $headerLink User-provided anchor from header_link field
-     * @param int    $uid        Content element UID for fallback
-     *
-     * @return string Validated anchor with # prefix, or fallback #c{uid}
-     */
-    private function sanitizeAnchor(string $headerLink, int $uid): string
-    {
-        // Validate: Only allow alphanumeric, underscore, and hyphen
-        // This prevents XSS attacks via malicious anchor strings
-        if (1 === preg_match('/^[a-zA-Z0-9_-]+$/', $headerLink)) {
-            return '#'.$headerLink;
-        }
-
-        // Invalid anchor: fall back to default #c{uid} format
-        return '#c'.$uid;
     }
 
     /**

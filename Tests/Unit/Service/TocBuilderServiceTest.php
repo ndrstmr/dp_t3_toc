@@ -11,6 +11,7 @@ use Ndrstmr\DpT3Toc\Event\BeforeTocItemsBuiltEvent;
 use Ndrstmr\DpT3Toc\Event\TocItemFilterEvent;
 use Ndrstmr\DpT3Toc\Service\TcaContainerCheckServiceInterface;
 use Ndrstmr\DpT3Toc\Service\TocBuilderService;
+use Ndrstmr\DpT3Toc\Service\TocItemMapper;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -23,6 +24,7 @@ final class TocBuilderServiceTest extends TestCase
     private MockObject&TcaContainerCheckServiceInterface $mockContainerCheck;
     private MockObject&LoggerInterface $mockLogger;
     private MockObject&EventDispatcherInterface $mockEventDispatcher;
+    private TocItemMapper $tocItemMapper;
 
     protected function setUp(): void
     {
@@ -31,11 +33,15 @@ final class TocBuilderServiceTest extends TestCase
         $this->mockLogger = $this->createMock(LoggerInterface::class);
         $this->mockEventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
+        // Use real TocItemMapper (not mocked - it's a simple mapper with no dependencies)
+        $this->tocItemMapper = new TocItemMapper();
+
         $this->service = new TocBuilderService(
             $this->mockRepo,
             $this->mockContainerCheck,
             $this->mockLogger,
-            $this->mockEventDispatcher
+            $this->mockEventDispatcher,
+            $this->tocItemMapper
         );
     }
 
