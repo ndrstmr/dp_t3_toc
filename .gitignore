@@ -14,3 +14,4 @@ tmp/
 # AI project files
 /.claude/
 /.gemini/
+/CLAUDE.md

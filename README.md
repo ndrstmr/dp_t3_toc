@@ -80,7 +80,7 @@ vendor/bin/typo3 extension:activate dp_t3_toc
 
 > **💡 Tip:** All FlexForm fields have smart defaults from Site Settings. Editors only need to change what's specific to their content element.
 
-See [Documentation/Site-Set-Configuration.md](Documentation/Site-Set-Configuration.md) for detailed configuration options.
+See [Documentation/Configuration/SiteSets.md](Documentation/Configuration/SiteSets.md) for detailed configuration options.
 
 ### Option 2: Custom TypoScript Configuration
 
@@ -459,11 +459,30 @@ tt_content.menu_table_of_contents {
 }
 ```
 
-See [Documentation/KERN-UX-Integration.md](Documentation/KERN-UX-Integration.md) for detailed integration guide.
+See [Documentation/Configuration/KernUX.md](Documentation/Configuration/KernUX.md) for detailed integration guide.
 
 **Resources**:
 - [Kern UX GitLab](https://gitlab.opencode.de/kern-ux/kern-ux-plain)
 - [Kern UX Pattern Library](https://gitlab.opencode.de/kern-ux/pattern-library)
+
+## 📖 Documentation
+
+### User Documentation
+- [Introduction](Documentation/Introduction.md) - Project overview and features
+- [Installation](Documentation/Installation.md) - Setup guide and troubleshooting
+- [Configuration](Documentation/Configuration/)
+  - [Site Sets](Documentation/Configuration/SiteSets.md) - Complete Site Settings reference
+  - [TypoScript](Documentation/Configuration/TypoScript.md) - TypoScript API reference
+  - [Kern UX Integration](Documentation/Configuration/KernUX.md) - Kern UX setup guide
+
+### Migration Guides
+- [Version 4 Migration](Documentation/Migration/Version4.md) - Upgrade guide from v3 to v4
+
+### Developer Documentation
+- [Architecture](Documentation/Developer/Architecture.md) - Clean Architecture and SOLID principles
+- [Testing](Documentation/Developer/Testing.md) - Test suite and QA tools
+- [PSR-14 Events](Documentation/Developer/PSR14Events.md) - Event system API reference
+- [Release Process](Documentation/Developer/ReleaseProcess.md) - Release workflow
 
 ## 🔗 Links
 
