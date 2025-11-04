@@ -26,7 +26,6 @@ $GLOBALS['TCA']['tt_content']['types']['menu_table_of_contents'] = [
         --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:general,
             --palette--;;general,
             --palette--;;headers,
-            pages;LLL:EXT:dp_t3_toc/Resources/Private/Language/locallang_db.xlf:tt_content.pages.menu_table_of_contents,
         --div--;LLL:EXT:dp_t3_toc/Resources/Private/Language/locallang_db.xlf:tt_content.tabs.toc_settings,
             pi_flexform,
         --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:appearance,
@@ -43,19 +42,6 @@ $GLOBALS['TCA']['tt_content']['types']['menu_table_of_contents'] = [
             rowDescription,
         --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:extended,
     ',
-    'columnsOverrides' => [
-        'pages' => [
-            'label' => 'LLL:EXT:dp_t3_toc/Resources/Private/Language/locallang_db.xlf:tt_content.pages.menu_table_of_contents',
-            'config' => [
-                'type' => 'group',
-                'allowed' => 'pages',
-                'size' => 3,
-                'maxitems' => 1,
-                'minitems' => 0,
-                'default' => 0,
-            ],
-        ],
-    ],
 ];
 
 // Add FlexForm for additional settings
