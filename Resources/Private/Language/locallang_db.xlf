@@ -64,7 +64,7 @@
                 <source>Visual layout of the Table of Contents.</source>
             </trans-unit>
             <trans-unit id="flexform.layout.sidebar">
-                <source>Sidebar (sticky, Bootstrap scrollspy)</source>
+                <source>Sidebar (sticky, scrollspy)</source>
             </trans-unit>
             <trans-unit id="flexform.layout.inline">
                 <source>Inline (horizontal list)</source>
@@ -78,7 +78,7 @@
                 <source>Enable Scrollspy</source>
             </trans-unit>
             <trans-unit id="flexform.scrollspy.description">
-                <source>Automatically highlight active section as user scrolls (requires Bootstrap 5 JavaScript).</source>
+                <source>Automatically highlight active section as user scrolls (vanilla JavaScript, no dependencies required).</source>
             </trans-unit>
 
             <!-- FlexForm: Sticky -->

@@ -35,31 +35,6 @@ settings:
     type: string
     default: ''
 
-  dp_t3_toc.defaultLayout:
-    category: dp_t3_toc
-    label: 'Default Layout Style'
-    description: 'Default visual layout for TOC elements'
-    type: string
-    default: 'inline'
-    enum:
-      inline: 'Inline (default - scrolls with page)'
-      sidebar: 'Sidebar (sticky navigation with scrollspy)'
-      dropdown: 'Dropdown (mobile-friendly collapsible menu)'
-
-  dp_t3_toc.defaultScrollspy:
-    category: dp_t3_toc
-    label: 'Enable Scrollspy by Default'
-    description: 'Auto-highlight active section as user scrolls (requires Bootstrap 5 JS)'
-    type: bool
-    default: true
-
-  dp_t3_toc.defaultSticky:
-    category: dp_t3_toc
-    label: 'Enable Sticky Position by Default'
-    description: 'Keep TOC visible when scrolling (only for sidebar layout)'
-    type: bool
-    default: true
-
   dp_t3_toc.defaultMaxDepth:
     category: dp_t3_toc
     label: 'Default Maximum Nesting Depth'

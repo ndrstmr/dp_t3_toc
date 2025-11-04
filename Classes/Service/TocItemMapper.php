@@ -17,7 +17,7 @@ use Ndrstmr\DpT3Toc\Utility\TypeCastingTrait;
  *
  * Single Responsibility: Mapping data → Domain Model
  */
-final readonly class TocItemMapper
+final readonly class TocItemMapper implements TocItemMapperInterface
 {
     use TypeCastingTrait;
 

@@ -26,11 +26,13 @@
 composer require ndrstmr/dp-t3-toc
 ```
 
-Activate the extension in the Extension Manager or via CLI:
+Run extension setup to execute database migrations and clear caches:
 
 ```bash
-vendor/bin/typo3 extension:activate dp_t3_toc
+vendor/bin/typo3 extension:setup
 ```
+
+> **Note:** In Composer mode (TYPO3 v11+), extensions are automatically activated after `composer require`. The `extension:setup` command ensures all database tables and configuration are properly initialized.
 
 ## 🚀 Quick Start
 
@@ -148,7 +150,7 @@ The Content Element supports 3 responsive layout modes:
 | **Dropdown** | Collapsible mobile-friendly menu | Mobile-first, space-constrained |
 
 **Features**:
-- **Scrollspy**: Auto-highlights active section (Bootstrap 5 required)
+- **Scrollspy**: Auto-highlights active section (custom IntersectionObserver implementation, no dependencies)
 - **Sticky**: Keeps TOC visible while scrolling (sidebar only)
 - **Responsive**: Adapts to mobile/tablet/desktop breakpoints
 - **Accessible**: WCAG 2.1 AA compliant with ARIA labels

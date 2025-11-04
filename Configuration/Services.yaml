@@ -19,6 +19,10 @@ services:
   Ndrstmr\DpT3Toc\Service\TcaContainerCheckServiceInterface:
     alias: Ndrstmr\DpT3Toc\Service\TcaContainerCheckService
 
+  # Service: Bind interface to implementation
+  Ndrstmr\DpT3Toc\Service\TocItemMapperInterface:
+    alias: Ndrstmr\DpT3Toc\Service\TocItemMapper
+
   # DataProcessor must be public to be accessible from TypoScript
   Ndrstmr\DpT3Toc\DataProcessing\TocProcessor:
     public: true

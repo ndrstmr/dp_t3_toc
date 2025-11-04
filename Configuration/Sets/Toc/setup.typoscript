@@ -25,27 +25,17 @@ tt_content.menu_table_of_contents {
 
         20 = Ndrstmr\DpT3Toc\DataProcessing\TocProcessor
         20 {
-            # Target page: from 'pages' field or current page
-            pidInList.cObject = TEXT
-            pidInList.cObject {
-                field = pages
-                ifEmpty.data = page:uid
-            }
+            # Target page: always current page
+            pidInList.data = page:uid
 
-            # Filter mode from FlexForm (with Site Settings fallback)
-            mode.field = tocSettings.settings.mode
-            mode.ifEmpty.data = siteSettings:dp_t3_toc.defaultMode
+            # Filter mode from Site Settings (not overridable per CE)
+            mode.data = siteSettings:dp_t3_toc.defaultMode
 
-            # Include colPos from FlexForm
-            includeColPos.field = tocSettings.settings.includeColPos
+            # Exclude colPos from Site Settings (not overridable per CE)
+            excludeColPos.data = siteSettings:dp_t3_toc.defaultExcludeColPos
 
-            # Exclude colPos from FlexForm (with Site Settings fallback)
-            excludeColPos.field = tocSettings.settings.excludeColPos
-            excludeColPos.ifEmpty.data = siteSettings:dp_t3_toc.defaultExcludeColPos
-
-            # Maximum nesting depth from FlexForm (with Site Settings fallback)
-            maxDepth.field = tocSettings.settings.maxDepth
-            maxDepth.ifEmpty.data = siteSettings:dp_t3_toc.defaultMaxDepth
+            # Maximum nesting depth from Site Settings (not overridable per CE)
+            maxDepth.data = siteSettings:dp_t3_toc.defaultMaxDepth
 
             # Store result as 'tocItems'
             as = tocItems

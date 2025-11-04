@@ -48,7 +48,7 @@ final class TocBuilderService implements TocBuilderServiceInterface
         private readonly TcaContainerCheckServiceInterface $containerCheckService,
         private readonly LoggerInterface $logger,
         private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly TocItemMapper $tocItemMapper,
+        private readonly TocItemMapperInterface $tocItemMapper,
     ) {
     }
 

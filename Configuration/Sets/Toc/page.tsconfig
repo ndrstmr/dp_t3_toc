@@ -19,21 +19,6 @@ mod.wizards.newContentElement.wizardItems {
     }
 }
 
-# Configure default values for new elements
-# Note: FlexForm defaults are now managed via Site Settings and FlexForm XML
-# TCAdefaults should only set non-configurable values
-TCAdefaults {
-    tt_content {
-        # Default FlexForm values for NEW elements only
-        pi_flexform.data.sDEF.lDEF {
-            # Layout and features - can be overridden
-            settings.layout.vDEF = sidebar
-            settings.scrollspy.vDEF = 1
-            settings.sticky.vDEF = 1
-
-            # Mode and filters - left empty to use Site Settings
-            # settings.mode, settings.excludeColPos, settings.includeColPos, settings.maxDepth
-            # are intentionally NOT set here to allow Site Settings to take precedence
-        }
-    }
-}
+# Note: FlexForm defaults are defined in Configuration/FlexForms/TableOfContents.xml
+# No TCAdefaults needed here - FlexForm handles UI defaults (layout, sticky, scrollspy)
+# Site Settings handle business logic defaults (mode, excludeColPos, maxDepth, etc.)

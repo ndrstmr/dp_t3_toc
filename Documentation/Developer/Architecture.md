@@ -59,7 +59,7 @@ interface ContentElementRepositoryInterface
 }
 ```
 
-**Implementation:** `Typo3ContentElementRepository`
+**Implementation:** `ContentElementRepository`
 - Solves N+1 query problem with eager loading
 - Single query for all container children across multiple pages
 
@@ -98,9 +98,9 @@ readonly class TocConfiguration
 
 ### Mapper Pattern
 
-**TocItemMapper** (Single Responsibility)
+**Interface:** `TocItemMapperInterface`
 ```php
-readonly class TocItemMapper
+interface TocItemMapperInterface
 {
     public function mapFromRow(
         array $row,
@@ -111,6 +111,7 @@ readonly class TocItemMapper
 }
 ```
 
+**Implementation:** `TocItemMapper` (readonly, Single Responsibility)
 Responsibilities:
 - Map DB row → TocItem domain model
 - Generate anchors (#c{uid} or header_link)
@@ -127,7 +128,7 @@ See [PSR14Events.md](PSR14Events.md) for detailed event documentation.
 - `TocBuilderService`: Traversal & filtering logic
 - `TocItemMapper`: Data mapping & anchor generation
 - `TcaContainerCheckService`: Container detection
-- `Typo3ContentElementRepository`: Data access
+- `ContentElementRepository`: Data access
 
 ### Open/Closed Principle (OCP)
 
@@ -164,10 +165,21 @@ services:
   Ndrstmr\DpT3Toc\:
     resource: '../Classes/*'
 
-  # Repository binding
+  # Repository: Bind interface to implementation
   Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepositoryInterface:
-    alias: Ndrstmr\DpT3Toc\Infrastructure\Repository\Typo3ContentElementRepository
-    public: true
+    alias: Ndrstmr\DpT3Toc\Domain\Repository\ContentElementRepository
+
+  # Service: Bind interface to implementation
+  Ndrstmr\DpT3Toc\Service\TocBuilderServiceInterface:
+    alias: Ndrstmr\DpT3Toc\Service\TocBuilderService
+
+  # Service: Bind interface to implementation
+  Ndrstmr\DpT3Toc\Service\TcaContainerCheckServiceInterface:
+    alias: Ndrstmr\DpT3Toc\Service\TcaContainerCheckService
+
+  # Service: Bind interface to implementation
+  Ndrstmr\DpT3Toc\Service\TocItemMapperInterface:
+    alias: Ndrstmr\DpT3Toc\Service\TocItemMapper
 ```
 
 ## Performance Optimizations
