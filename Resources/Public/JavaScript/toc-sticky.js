@@ -7,7 +7,11 @@
  * - Responsive width/position updates
  * - Performance optimized with requestAnimationFrame
  *
- * @module @ndrstmr/dp-t3-toc/toc-sticky
+ * Exports:
+ * - initSticky(): Initialize sticky positioning for all TOC elements
+ * - cleanupSticky(): Cleanup observers and event listeners
+ *
+ * @module toc-sticky
  */
 
 /**

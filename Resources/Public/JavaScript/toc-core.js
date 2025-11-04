@@ -10,8 +10,9 @@
  * - No dependencies - modules load independently
  * - TYPO3 AJAX content support
  * - Proper cleanup on page unload
+ * - Uses relative imports (./toc-sticky.js) for frontend compatibility
  *
- * @module @ndrstmr/dp-t3-toc/toc-core
+ * @module toc-core
  */
 
 /**

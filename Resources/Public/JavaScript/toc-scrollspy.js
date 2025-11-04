@@ -7,7 +7,12 @@
  * - Performance optimized with IntersectionObserver API
  * - Supports nested navigation structures
  *
- * @module @ndrstmr/dp-t3-toc/toc-scrollspy
+ * Exports:
+ * - initScrollspy(): Initialize scrollspy for all TOC elements
+ * - cleanupScrollspy(): Cleanup observers
+ * - refreshScrollspy(): Re-initialize scrollspy instances
+ *
+ * @module toc-scrollspy
  */
 
 /**
