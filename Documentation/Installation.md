@@ -9,8 +9,8 @@
 ### Optional Dependencies
 
 - **b13/container**: For nested container support
-- **Bootstrap 5**: For default styling
-- **Kern UX**: For German government design standard
+- **Bootstrap 5 CSS**: For default styling (JavaScript NOT required)
+- **Kern UX CSS**: For German government design standard
 
 ## Installation Steps
 
@@ -77,12 +77,13 @@ If you're using the Bootstrap 5 template and don't have Bootstrap in your projec
 <link rel="stylesheet" href="{f:uri.resource(path:'Css/toc.css', extensionName:'DpT3Toc')}" />
 ```
 
-Or include Bootstrap 5 from CDN:
+Or include Bootstrap 5 CSS from CDN:
 
 ```html
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 ```
+
+> **Note:** Bootstrap JavaScript is **NOT required**. This extension uses vanilla JavaScript with IntersectionObserver API for all features (sticky positioning and scrollspy).
 
 #### For Kern UX
 
@@ -138,7 +139,7 @@ You should see **"Table of Contents"** section with configuration options.
 
 **Solution**:
 1. Check if CSS is included in your page template
-2. For Bootstrap 5: Ensure Bootstrap CSS/JS is loaded
+2. For Bootstrap 5: Ensure Bootstrap CSS is loaded (JavaScript NOT needed)
 3. For Kern UX: Ensure Kern Design System CSS is loaded
 4. Check browser console for 404 errors
 

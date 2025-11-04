@@ -150,7 +150,7 @@ The Content Element supports 3 responsive layout modes:
 | **Dropdown** | Collapsible mobile-friendly menu | Mobile-first, space-constrained |
 
 **Features**:
-- **Scrollspy**: Auto-highlights active section (Bootstrap 5 required)
+- **Scrollspy**: Auto-highlights active section (custom IntersectionObserver implementation, no dependencies)
 - **Sticky**: Keeps TOC visible while scrolling (sidebar only)
 - **Responsive**: Adapts to mobile/tablet/desktop breakpoints
 - **Accessible**: WCAG 2.1 AA compliant with ARIA labels
