@@ -1,0 +1,199 @@
+/**
+ * Table of Contents - Bootstrap 5 Enhancement Layer
+ *
+ * Requires: toc-base.css (loaded first)
+ * Requires: Bootstrap 5 CSS (external)
+ * Purpose: Override CSS custom properties with Bootstrap 5 values
+ *
+ * This file makes TOC integrate seamlessly with Bootstrap 5 design system
+ * by mapping Bootstrap CSS custom properties to TOC variables.
+ *
+ * CSS Architecture:
+ * 1. toc-base.css        ← Vanilla baseline (ALWAYS loaded)
+ * 2. toc-bootstrap.css   ← This file (Bootstrap enhancement)
+ * 3. toc-sticky.css      ← Sticky positioning
+ * 4. toc-scrollspy.css   ← Scrollspy active states
+ */
+
+/* ====================================================================
+   Bootstrap 5 Integration - CSS Custom Properties Override
+   ==================================================================== */
+
+.toc {
+    /* Colors - Use Bootstrap 5 palette */
+    --toc-color-primary: var(--bs-primary, #0d6efd);
+    --toc-color-primary-hover: #0a58ca; /* Bootstrap $primary-dark equivalent */
+    --toc-color-primary-active: #0a58ca;
+    --toc-color-text: var(--bs-body-color, #212529);
+    --toc-color-text-muted: var(--bs-secondary-color, #6c757d);
+    --toc-color-border: var(--bs-border-color, #dee2e6);
+    --toc-color-bg-active: rgba(13, 110, 253, 0.1); /* Bootstrap primary with alpha */
+    --toc-color-bg-hover: var(--bs-light, #f8f9fa);
+
+    /* Spacing - Use Bootstrap spacing scale */
+    --toc-space-xs: 0.25rem; /* Bootstrap $spacer * 0.25 */
+    --toc-space-sm: 0.5rem;  /* Bootstrap $spacer * 0.5 */
+    --toc-space-md: 1rem;    /* Bootstrap $spacer */
+    --toc-space-lg: 1.5rem;  /* Bootstrap $spacer * 1.5 */
+    --toc-space-xl: 2rem;    /* Bootstrap $spacer * 2 */
+
+    /* Typography - Use Bootstrap font stack */
+    --toc-font-family: var(--bs-body-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+    --toc-font-size: var(--bs-body-font-size, 1rem);
+    --toc-line-height: var(--bs-body-line-height, 1.5);
+
+    /* Border & Radius - Use Bootstrap values */
+    --toc-border-width: var(--bs-border-width, 1px);
+    --toc-border-radius: var(--bs-border-radius, 0.375rem);
+
+    /* Transitions - Use Bootstrap timing */
+    --toc-transition-duration: 0.15s; /* Bootstrap default */
+    --toc-transition-easing: ease-in-out;
+}
+
+/* ====================================================================
+   Bootstrap Class Compatibility
+   ==================================================================== */
+
+/**
+ * These rules ensure Bootstrap classes (.nav, .nav-item, .nav-link)
+ * work correctly within TOC components for backward compatibility.
+ */
+
+/* Bootstrap .nav compatibility for sidebar */
+.toc--sidebar .nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.toc--sidebar .nav-item {
+    margin: 0;
+}
+
+.toc--sidebar .nav-link {
+    display: block;
+    padding: var(--toc-space-sm) var(--toc-space-md);
+    color: var(--toc-color-primary);
+    text-decoration: none;
+    transition: all var(--toc-transition-duration) var(--toc-transition-easing);
+}
+
+.toc--sidebar .nav-link:hover,
+.toc--sidebar .nav-link:focus {
+    color: var(--toc-color-primary-hover);
+}
+
+.toc--sidebar .nav-link.active {
+    color: var(--toc-color-primary-active);
+    font-weight: 600;
+}
+
+/* Bootstrap .nav-pills compatibility for inline layout */
+.toc--inline .nav-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--toc-space-sm);
+}
+
+.toc--inline .nav-pills .nav-item {
+    margin: 0;
+}
+
+.toc--inline .nav-pills .nav-link {
+    padding: var(--toc-space-sm) var(--toc-space-md);
+    border-radius: var(--toc-border-radius);
+    background-color: var(--toc-color-bg-hover);
+    border: var(--toc-border-width) solid var(--toc-color-border);
+}
+
+.toc--inline .nav-pills .nav-link:hover {
+    background-color: var(--toc-color-border);
+}
+
+.toc--inline .nav-pills .nav-link.active {
+    background-color: var(--toc-color-bg-active);
+    border-color: var(--toc-color-primary-active);
+}
+
+/* ====================================================================
+   Bootstrap Accordion Integration (Compact Layout)
+   ==================================================================== */
+
+/**
+ * Bootstrap 5 Accordion is used for compact layout.
+ * Uses Bootstrap's native accordion.js with .accordion, .accordion-item,
+ * .accordion-header, .accordion-button, .accordion-body classes.
+ *
+ * Minimal custom styling needed - Bootstrap handles most of it.
+ */
+
+/* Remove toc-base.css border/radius - Bootstrap Accordion Flush handles this */
+.toc--compact.accordion-flush {
+    border: none;
+    border-radius: 0;
+}
+
+.toc--compact .toc__link {
+    color: var(--toc-color-primary);
+    text-decoration: none;
+    padding: var(--toc-space-sm) 0;
+    display: block;
+}
+
+.toc--compact .toc__link:hover {
+    color: var(--toc-color-primary-hover);
+    text-decoration: underline;
+}
+
+.toc--compact .accordion-body {
+    padding-top: var(--toc-space-sm);
+    padding-bottom: var(--toc-space-sm);
+}
+
+/* ====================================================================
+   Bootstrap Utilities Compatibility
+   ==================================================================== */
+
+/* Ensure Bootstrap spacing utilities work correctly */
+.toc .m-0  { margin: 0 !important; }
+.toc .p-0  { padding: 0 !important; }
+.toc .mb-2 { margin-bottom: var(--toc-space-sm) !important; }
+.toc .mb-3 { margin-bottom: var(--toc-space-md) !important; }
+
+/* ====================================================================
+   Dark Mode - Bootstrap Support
+   ==================================================================== */
+
+/**
+ * Bootstrap 5.3+ includes dark mode support via [data-bs-theme="dark"]
+ * These rules ensure TOC matches Bootstrap dark mode automatically.
+ */
+
+[data-bs-theme="dark"] .toc {
+    --toc-color-primary: #66b3ff;
+    --toc-color-primary-hover: #99ccff;
+    --toc-color-primary-active: #99ccff;
+    --toc-color-text: var(--bs-body-color, #dee2e6);
+    --toc-color-text-muted: var(--bs-secondary-color, #adb5bd);
+    --toc-color-border: var(--bs-border-color, #495057);
+    --toc-color-bg-active: rgba(102, 179, 255, 0.15);
+    --toc-color-bg-hover: var(--bs-dark, #212529);
+}
+
+
+/* ====================================================================
+   Responsive Adjustments for Bootstrap Grid
+   ==================================================================== */
+
+/**
+ * Ensure TOC works correctly within Bootstrap grid system
+ * (.container, .row, .col-* classes).
+ */
+
+/* When TOC is in a narrow column, reduce sidebar max-width */
+@media (min-width: 992px) {
+    .col-lg-3 .toc--sidebar,
+    .col-md-4 .toc--sidebar {
+        max-width: 100%;
+    }
+}

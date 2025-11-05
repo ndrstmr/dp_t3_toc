@@ -8,11 +8,11 @@ tt_content.menu_table_of_contents {
         10 = EXT:dp_t3_toc/Resources/Private/Templates/
     }
 
-    # Template Selection: Bootstrap 5 or Kern UX (configurable via Site Settings)
+    # Template Selection: Base (vanilla), Bootstrap, or Kern UX (configurable via Site Settings)
     templateName = TEXT
     templateName {
         data = siteSettings:dp_t3_toc.template
-        ifEmpty = TableOfContents
+        ifEmpty = TableOfContentsBase
     }
 
     dataProcessing {

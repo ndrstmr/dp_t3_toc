@@ -4,6 +4,8 @@
 
 <f:section name="Main">
 
+<f:asset.css identifier="toc-base" href="EXT:dp_t3_toc/Resources/Public/Css/toc-base.css" />
+<f:asset.css identifier="toc-kern" href="EXT:dp_t3_toc/Resources/Public/Css/toc-kern.css" />
 <f:asset.css identifier="toc-sticky" href="EXT:dp_t3_toc/Resources/Public/Css/toc-sticky.css" />
 <f:asset.script identifier="toc-core" src="EXT:dp_t3_toc/Resources/Public/JavaScript/toc-core.js" additionalAttributes="{type: 'module'}" />
 <f:if condition="{tocSettings.settings.scrollspy}">
@@ -54,35 +56,32 @@
             </nav>
         </f:case>
 
-        <f:case value="dropdown">
-            <nav id="kern-toc-{data.uid}"
-                 class="kern-toc kern-toc--dropdown"
-                 aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}">
-
-                <div class="dropdown">
-                    <button class="kern-btn kern-btn--secondary dropdown-toggle kern-toc__toggle"
-                            type="button"
-                            id="kernTocDropdown-{data.uid}"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false">
+        <f:case value="compact">
+            <details class="kern-accordion kern-toc kern-toc--compact" id="kern-toc-{data.uid}">
+                <summary class="kern-accordion__header kern-toc__summary">
+                    <span class="kern-title">
                         <f:if condition="{data.header}">
                             <f:then>{data.header}</f:then>
-                            <f:else><f:translate key="toc.dropdown_label" extensionName="DpT3Toc" /></f:else>
+                            <f:else><f:translate key="toc.compact_label" extensionName="DpT3Toc" /></f:else>
                         </f:if>
-                    </button>
+                    </span>
+                </summary>
 
-                    <ul class="dropdown-menu kern-toc__list" aria-labelledby="kernTocDropdown-{data.uid}">
-                        <f:for each="{tocItems}" as="item">
-                            <li class="kern-toc__item kern-toc__item--level-{item.level}">
-                                <a class="dropdown-item kern-toc__link kern-link"
-                                   href="{item.anchor}">
-                                    {item.title}
-                                </a>
-                            </li>
-                        </f:for>
-                    </ul>
-                </div>
-            </nav>
+                <section class="kern-accordion__body kern-toc__body">
+                    <nav aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}">
+                        <ul class="kern-toc__list kern-list">
+                            <f:for each="{tocItems}" as="item">
+                                <li class="kern-toc__item kern-toc__item--level-{item.level}">
+                                    <a class="kern-toc__link kern-link"
+                                       href="{item.anchor}">
+                                        {item.title}
+                                    </a>
+                                </li>
+                            </f:for>
+                        </ul>
+                    </nav>
+                </section>
+            </details>
         </f:case>
 
         <f:defaultCase>

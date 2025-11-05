@@ -8,9 +8,10 @@
 
 ## ✨ Features
 
+- ✅ **Zero Dependencies**: Vanilla CSS baseline, works out-of-the-box without Bootstrap or frameworks
 - ✅ **Ready-to-Use Content Element**: Plug & Play TOC with visual backend configuration
-- ✅ **Bootstrap 5 + Kern UX**: Professional styling, government-standard accessible design
-- ✅ **3 Layout Modes**: Sidebar (sticky scrollspy), Inline (horizontal), Dropdown (mobile-friendly)
+- ✅ **3 Template Styles**: Base (vanilla), Bootstrap 5, Kern UX (German government standard)
+- ✅ **3 Layout Modes**: Sidebar (sticky scrollspy), Inline (horizontal), Compact (accordion, mobile-friendly)
 - ✅ **Container-Aware**: Full support for nested b13/container structures
 - ✅ **Flexible Filtering**: Include/exclude colPos, multiple filter modes
 - ✅ **SOLID-Compliant**: Clean Architecture with Repository Pattern
@@ -54,31 +55,34 @@ vendor/bin/typo3 extension:setup
    # config/sites/<yoursite>/settings.yaml
    settings:
      dp_t3_toc:
-       template: 'TableOfContents'  # Bootstrap 5 (default)
+       template: 'TableOfContentsBase'  # Vanilla CSS (default, zero dependencies)
        # OR
-       template: 'TableOfContentsKern'  # Kern UX (government standard)
+       template: 'TableOfContentsBootstrap'  # Bootstrap 5 (requires Bootstrap CSS)
+       # OR
+       template: 'TableOfContentsKern'  # Kern UX (requires Kern UX CSS, government standard)
    ```
 
-3. **Add CSS** (based on your template choice)
+3. **Add CSS** (optional - only if using Bootstrap or Kern UX)
    ```html
-   <!-- If using Bootstrap 5 (default) -->
-   <link rel="stylesheet" href="{f:uri.resource(path:'Css/toc.css', extensionName:'DpT3Toc')}" />
+   <!-- Vanilla (default): No additional CSS needed! Already included. -->
+
+   <!-- If using Bootstrap 5 -->
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+   <!-- Note: Bootstrap JavaScript IS required for Accordion (compact layout) -->
 
    <!-- If using Kern UX -->
    <link rel="stylesheet" href="path/to/kern-ux-plain/dist/kern.css" />
-   <link rel="stylesheet" href="{f:uri.resource(path:'Css/toc-kern.css', extensionName:'DpT3Toc')}" />
    ```
 
-4. **Create Content Element**
+3. **Create Content Element**
    - Add new content element → Menu → **Table of Contents**
    - Configure via FlexForm (all visual, no TypoScript needed!):
-     - **Filter Mode**: Section Index Only / Visible Headers / All
-     - **Layout**: Sidebar (sticky) / Inline / Dropdown
-     - **Exclude Columns**: `5,88` (sidebar columns)
-     - **Enable Scrollspy**: ✓
-     - **Enable Sticky**: ✓
+     - **Layout**: Sidebar (sticky) / Inline / Compact (accordion)
+     - **Enable Scrollspy**: ✓ (sidebar only)
+     - **Enable Sticky**: ✓ (sidebar only)
 
-5. **Done!** The TOC is ready with your chosen template style.
+4. **Done!** The TOC works out-of-the-box with vanilla CSS - no external dependencies needed!
 
 > **💡 Tip:** All FlexForm fields have smart defaults from Site Settings. Editors only need to change what's specific to their content element.
 
@@ -145,15 +149,35 @@ The Content Element supports 3 responsive layout modes:
 
 | Layout | Description | Best For |
 |--------|-------------|----------|
-| **Sidebar** | Sticky navigation with Bootstrap scrollspy, vertical list | Documentation, long-form content |
+| **Sidebar** | Sticky navigation with scrollspy, vertical list | Documentation, long-form content |
 | **Inline** | Horizontal pills navigation | Short TOC, landing pages |
-| **Dropdown** | Collapsible mobile-friendly menu | Mobile-first, space-constrained |
+| **Compact** | Accordion pattern with expand/collapse | Mobile-first, space-constrained |
 
 **Features**:
 - **Scrollspy**: Auto-highlights active section (custom IntersectionObserver implementation, no dependencies)
 - **Sticky**: Keeps TOC visible while scrolling (sidebar only)
 - **Responsive**: Adapts to mobile/tablet/desktop breakpoints
 - **Accessible**: WCAG 2.1 AA compliant with ARIA labels
+
+**Compact Layout Implementation:**
+
+The compact layout uses accessible accordion patterns for mobile-friendly navigation:
+
+- **Base (vanilla)**: Native HTML5 `<details>`/`<summary>` - no JavaScript required, browser-native functionality
+- **Bootstrap**: Bootstrap 5 Accordion component with collapse.js - requires Bootstrap JavaScript
+- **Kern UX**: Native HTML5 `<details>`/`<summary>` with [Kern UX Accordion styling](https://www.kern-ux.de/komponenten/accordion) - no JavaScript required
+
+All implementations are fully accessible with:
+- Keyboard navigation (Enter, Space to toggle)
+- Screen reader support (native semantic HTML)
+- ARIA attributes for state (`aria-expanded`, `aria-controls`)
+- Reduced motion support (`@media (prefers-reduced-motion)`)
+
+The accordion pattern is superior to traditional dropdowns for mobile because:
+- ✅ Expands inline (no overlay, no viewport overflow)
+- ✅ Large touch targets (entire header is clickable)
+- ✅ Native browser support (no custom JavaScript for Base/Kern)
+- ✅ Semantic HTML for better accessibility
 
 ### colPos Filtering Examples
 

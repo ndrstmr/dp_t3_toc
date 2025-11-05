@@ -12,6 +12,10 @@
                 <source>Table of Contents</source>
                 <target>Inhaltsverzeichnis</target>
             </trans-unit>
+            <trans-unit id="toc.compact_label">
+                <source>Table of Contents</source>
+                <target>Inhaltsverzeichnis</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

@@ -2,157 +2,91 @@
  * Table of Contents - Scrollspy Active State Styling
  *
  * Visual feedback for active navigation items when scrollspy is enabled
+ * Uses CSS custom properties from toc-base.css (vanilla baseline)
+ * Framework-agnostic - works with vanilla, Bootstrap, and Kern UX
+ *
+ * CSS Architecture:
+ * - toc-base.css (vanilla) OR toc-bootstrap.css OR toc-kern.css defines custom properties
+ * - toc-scrollspy.css (this file) uses those custom properties
+ *
+ * Dependencies: toc-base.css (or framework enhancement layer)
  */
 
 /* ====================================================================
-   Bootstrap 5 Template Styles
+   Scrollspy Active State - Vanilla Baseline
    ==================================================================== */
 
-/* Sidebar Layout - Kickstarter Design */
-.toc--sidebar {
-    padding-left: 0;
-}
-
-/* List itself */
-.toc--sidebar .toc__list {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    list-style: none;
-    padding-left: 0;
-}
-
-/* List Items - Border on item level (Kickstarter style) */
+/* Sidebar Layout - Bootstrap Scrollspy (no border, only font-weight) */
 .toc--sidebar .toc__item {
-    border-left: 4px solid var(--bs-gray-300, #d1d5db);
-    transition: border-color 0.2s ease-in-out;
-    padding: 0.5rem 1rem;
-    margin-bottom: 1rem;
+    padding: var(--toc-space-sm) var(--toc-space-md);
 }
 
-.toc--sidebar .toc__item:last-child {
-    margin-bottom: 0;
-}
-
-/* Sidebar Layout with Scrollspy */
-[data-toc-scrollspy="true"] .toc--sidebar .toc__link {
-    position: relative;
-    transition: font-weight 0.2s ease-in-out;
-    display: block;
-}
-
-/* Active state - applied to list item (Kickstarter style) */
-[data-toc-scrollspy="true"] .toc--sidebar .toc__item.active {
-    border-left-color: var(--bs-primary, #0d6efd);
-}
-
+/* Active state - applied to list item (font-weight on link) */
 [data-toc-scrollspy="true"] .toc--sidebar .toc__item.active .toc__link {
-    font-weight: 600;
+    font-weight: var(--toc-font-weight-bold);
 }
 
 /* Hover state - same as active */
-[data-toc-scrollspy="true"] .toc--sidebar .toc__item:hover {
-    border-left-color: var(--bs-primary, #0d6efd);
-}
-
 [data-toc-scrollspy="true"] .toc--sidebar .toc__link:hover {
-    font-weight: 600;
+    font-weight: var(--toc-font-weight-bold);
     text-decoration: none;
 }
 
 /* Focus state (accessibility) */
 [data-toc-scrollspy="true"] .toc--sidebar .toc__link:focus-visible {
-    outline: 2px solid var(--bs-primary, #0d6efd);
-    outline-offset: 2px;
+    outline: calc(var(--toc-border-width) * 2) solid var(--toc-color-primary);
+    outline-offset: calc(var(--toc-border-width) * 2);
 }
 
-
 /* ====================================================================
-   Kern UX Template Styles
+   Kern UX Template - Using Kern Custom Properties
    ==================================================================== */
 
 /* Sidebar Layout - Kickstarter Design */
-.kern-toc--sidebar {
-    padding-left: 0;
-}
-
-/* List itself */
-.kern-toc--sidebar .kern-toc__list {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    list-style: none;
-    padding-left: 0;
-}
-
-/* List Items - Border on item level (Kickstarter style) */
 .kern-toc--sidebar .kern-toc__item {
-    border-left: 4px solid var(--theme-neutral-300, #d1d5db);
+    border-left: 4px solid var(--toc-color-border);
     transition: border-color 0.2s ease-in-out;
-    padding: var(--kern-metric-space-small, 8px) var(--kern-metric-space-default, 16px);
-}
-
-.kern-toc--sidebar .kern-toc__item:last-child {
-    margin-bottom: 0;
-}
-
-/* Sidebar Layout with Scrollspy */
-[data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__link {
-    position: relative;
-    transition: font-weight 0.2s ease-in-out;
-    display: block;
+    padding: var(--toc-space-sm) var(--toc-space-md);
 }
 
 /* Active state - applied to list item (Kickstarter style) */
 [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item.active {
-    border-left-color: var(--theme-brand-primary-500, #004b76);
+    border-left-color: var(--toc-color-primary);
 }
 
 [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item.active .kern-toc__link {
-    font-weight: var(--kern-typography-font-weight-semi-bold, 600);
+    font-weight: var(--toc-font-weight-bold);
 }
 
 /* Hover state - same as active */
 [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item:hover {
-    border-left-color: var(--theme-brand-primary-500, #004b76);
+    border-left-color: var(--toc-color-primary-hover);
 }
 
 [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__link:hover {
-    font-weight: var(--kern-typography-font-weight-semi-bold, 600);
+    font-weight: var(--toc-font-weight-bold);
     text-decoration: none;
 }
 
 /* Focus state (WCAG 2.1 compliant) */
 [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__link:focus-visible {
-    outline: 2px solid var(--kern-color-focus, #004b76);
-    outline-offset: 2px;
+    outline: calc(var(--toc-border-width) * 2) solid var(--toc-color-primary);
+    outline-offset: calc(var(--toc-border-width) * 2);
 }
-
 
 /* ====================================================================
-   Dark Mode Support (Kern UX)
+   Dark Mode Support (Automatic via CSS Custom Properties)
    ==================================================================== */
 
-@media (prefers-color-scheme: dark) {
-    .kern-toc--sidebar .kern-toc__item {
-        border-left-color: var(--theme-neutral-600, #4b5563);
-    }
-
-    [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item.active,
-    [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item:hover {
-        border-left-color: var(--theme-brand-primary-400, #6fb3e0);
-    }
-}
-
-[data-kern-theme="dark"] .kern-toc--sidebar .kern-toc__item {
-    border-left-color: var(--theme-neutral-600, #4b5563);
-}
-
-[data-kern-theme="dark"] [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item.active,
-[data-kern-theme="dark"] [data-toc-scrollspy="true"] .kern-toc--sidebar .kern-toc__item:hover {
-    border-left-color: var(--theme-brand-primary-400, #6fb3e0);
-}
-
+/**
+ * Dark mode is automatically handled by framework layers:
+ * - toc-base.css: @media (prefers-color-scheme: dark)
+ * - toc-bootstrap.css: [data-bs-theme="dark"]
+ * - toc-kern.css: [data-kern-theme="dark"] + @media (prefers-color-scheme: dark)
+ *
+ * All frameworks override --toc-color-* custom properties in dark mode,
+ * so no additional dark mode CSS needed here!
+ */
 
 /* ====================================================================
    Smooth Scrolling Enhancement
@@ -167,14 +101,15 @@ html {
     scroll-padding-top: 100px;
 }
 
-
 /* ====================================================================
    Accessibility: Reduced Motion
    ==================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
     [data-toc-scrollspy="true"] .toc__link,
-    [data-toc-scrollspy="true"] .kern-toc__link {
+    [data-toc-scrollspy="true"] .kern-toc__link,
+    [data-toc-scrollspy="true"] .toc__item,
+    [data-toc-scrollspy="true"] .kern-toc__item {
         transition: none;
     }
 

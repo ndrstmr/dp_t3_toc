@@ -69,8 +69,8 @@
             <trans-unit id="flexform.layout.inline">
                 <source>Inline (horizontal list)</source>
             </trans-unit>
-            <trans-unit id="flexform.layout.dropdown">
-                <source>Dropdown (mobile-friendly collapsible)</source>
+            <trans-unit id="flexform.layout.compact">
+                <source>Compact (accordion, mobile-friendly)</source>
             </trans-unit>
 
             <!-- FlexForm: Scrollspy -->

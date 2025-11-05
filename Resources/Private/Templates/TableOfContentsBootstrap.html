@@ -1,0 +1,120 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+
+<f:layout name="Default" />
+
+<f:section name="Main">
+
+<f:asset.css identifier="toc-base" href="EXT:dp_t3_toc/Resources/Public/Css/toc-base.css" />
+<f:asset.css identifier="toc-bootstrap" href="EXT:dp_t3_toc/Resources/Public/Css/toc-bootstrap.css" />
+<f:asset.css identifier="toc-sticky" href="EXT:dp_t3_toc/Resources/Public/Css/toc-sticky.css" />
+<f:asset.script identifier="toc-core" src="EXT:dp_t3_toc/Resources/Public/JavaScript/toc-core.js" additionalAttributes="{type: 'module'}" />
+<f:if condition="{tocSettings.settings.scrollspy}">
+    <f:asset.css identifier="toc-scrollspy" href="EXT:dp_t3_toc/Resources/Public/Css/toc-scrollspy.css" />
+</f:if>
+
+<f:if condition="{tocItems}">
+    <f:switch expression="{tocSettings.settings.layout}">
+
+        <f:case value="sidebar">
+            <nav id="toc-{data.uid}"
+                 class="toc toc--sidebar"
+                 aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}"
+                 data-toc-layout="sidebar"
+                 data-toc-sticky="{tocSettings.settings.sticky}"
+                 data-toc-scrollspy="{tocSettings.settings.scrollspy}"
+                 data-toc-uid="{data.uid}">
+
+                <ul class="nav flex-column toc__list">
+                    <f:for each="{tocItems}" as="item">
+                        <li class="nav-item toc__item toc__item--level-{item.level}">
+                            <a class="nav-link toc__link"
+                               href="{item.anchor}"
+                               data-toc-level="{item.level}">
+                                {item.title}
+                            </a>
+                        </li>
+                    </f:for>
+                </ul>
+            </nav>
+        </f:case>
+
+        <f:case value="inline">
+            <nav id="toc-{data.uid}"
+                 class="toc toc--inline"
+                 aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}">
+
+                <ul class="nav nav-pills toc__list">
+                    <f:for each="{tocItems}" as="item">
+                        <li class="nav-item toc__item">
+                            <a class="nav-link toc__link"
+                               href="{item.anchor}">
+                                {item.title}
+                            </a>
+                        </li>
+                    </f:for>
+                </ul>
+            </nav>
+        </f:case>
+
+        <f:case value="compact">
+            <div class="accordion accordion-flush toc toc--compact" id="toc-{data.uid}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="tocHeading-{data.uid}">
+                        <button class="accordion-button collapsed toc__summary"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#tocCollapse-{data.uid}"
+                                aria-expanded="false"
+                                aria-controls="tocCollapse-{data.uid}">
+                            <f:if condition="{data.header}">
+                                <f:then>{data.header}</f:then>
+                                <f:else><f:translate key="toc.compact_label" extensionName="DpT3Toc" /></f:else>
+                            </f:if>
+                        </button>
+                    </h2>
+                    <div id="tocCollapse-{data.uid}"
+                         class="accordion-collapse collapse"
+                         aria-labelledby="tocHeading-{data.uid}"
+                         data-bs-parent="#toc-{data.uid}">
+                        <div class="accordion-body toc__body">
+                            <nav aria-label="{f:if(condition: data.header, then: data.header, else: '{f:translate(key: \'toc.aria_label\', extensionName: \'DpT3Toc\')}')}">
+                                <ul class="list-unstyled toc__list">
+                                    <f:for each="{tocItems}" as="item">
+                                        <li class="toc__item toc__item--level-{item.level}">
+                                            <a class="toc__link"
+                                               href="{item.anchor}">
+                                                {item.title}
+                                            </a>
+                                        </li>
+                                    </f:for>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </f:case>
+
+        <f:defaultCase>
+            <nav id="toc-{data.uid}"
+                 class="toc toc--sidebar"
+                 aria-label="{f:translate(key: 'toc.aria_label', extensionName: 'DpT3Toc')}">
+
+                <ul class="nav flex-column toc__list">
+                    <f:for each="{tocItems}" as="item">
+                        <li class="nav-item toc__item toc__item--level-{item.level}">
+                            <a class="nav-link toc__link" href="{item.anchor}">
+                                {item.title}
+                            </a>
+                        </li>
+                    </f:for>
+                </ul>
+            </nav>
+        </f:defaultCase>
+
+    </f:switch>
+</f:if>
+
+</f:section>
+
+</html>

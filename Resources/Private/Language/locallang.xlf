@@ -10,6 +10,9 @@
             <trans-unit id="toc.dropdown_label">
                 <source>Table of Contents</source>
             </trans-unit>
+            <trans-unit id="toc.compact_label">
+                <source>Table of Contents</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>
