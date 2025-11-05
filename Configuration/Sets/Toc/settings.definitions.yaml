@@ -10,12 +10,13 @@ settings:
   dp_t3_toc.template:
     category: dp_t3_toc
     label: 'Template Style'
-    description: 'Choose between Bootstrap 5 or Kern UX template styling'
+    description: 'Choose template style: Base (zero dependencies), Bootstrap 5, or Kern UX'
     type: string
-    default: 'TableOfContents'
+    default: 'TableOfContentsBase'
     enum:
-      TableOfContents: 'Bootstrap 5 (default - modern websites)'
-      TableOfContentsKern: 'Kern UX (German government standard)'
+      TableOfContentsBase: 'Base (vanilla CSS, zero dependencies - recommended)'
+      TableOfContentsBootstrap: 'Bootstrap 5 (requires Bootstrap CSS)'
+      TableOfContentsKern: 'Kern UX (requires Kern UX CSS, German government standard)'
 
   dp_t3_toc.defaultMode:
     category: dp_t3_toc

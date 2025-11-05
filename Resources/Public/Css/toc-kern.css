@@ -1,23 +1,62 @@
 /**
- * Table of Contents - Kern UX Native Styles
+ * Table of Contents - Kern UX Enhancement Layer
+ *
+ * Requires: toc-base.css (loaded first)
+ * Requires: Kern UX CSS (external)
+ * Purpose: Override CSS custom properties with Kern UX design tokens
  *
  * Native Kern UX implementation using official design tokens
  * Follows KERN design system standards for German government applications
  * WCAG 2.1 AA compliant | Responsive | Dark mode ready
+ *
+ * CSS Architecture:
+ * 1. toc-base.css      ← Vanilla baseline (ALWAYS loaded)
+ * 2. toc-kern.css      ← This file (Kern UX enhancement)
+ * 3. toc-sticky.css    ← Sticky positioning
+ * 4. toc-scrollspy.css ← Scrollspy active states
  *
  * @author Andreas Teumer
  * @see https://gitlab.opencode.de/kern-ux/kern-ux-plain
  */
 
 /* ====================================================================
-   Kern UX TOC Component
+   Kern UX Integration - CSS Custom Properties Override
    ==================================================================== */
 
 .kern-toc {
-    /* Use Kern typography tokens */
-    font-family: var(--kern-typography-font-family-default, "Fira Sans", "Noto Sans", "SF Pro Text", "Segoe UI", Roboto, Arial, sans-serif);
-    font-size: var(--kern-typography-font-size-static-medium, 18px);
-    line-height: var(--kern-typography-line-height-static-medium, 24px);
+    /* Override toc-base.css custom properties with Kern UX tokens */
+    --toc-color-primary: var(--kern-color-action-default);
+    --toc-color-primary-hover: var(--kern-color-action-state-indicator-shade-hover);
+    --toc-color-primary-active: var(--kern-color-action-state-indicator-shade-active);
+    --toc-color-text: var(--kern-color-layout-text-default);
+    --toc-color-border: var(--kern-color-layout-border);
+    --toc-color-bg-active: var(--kern-color-action-state-indicator-tint-active-opacity);
+    --toc-color-bg-hover: var(--kern-color-action-state-indicator-tint-hover-opacity);
+
+    /* Spacing - Use Kern metric tokens */
+    --toc-space-xs: var(--kern-metric-space-2x-small, 2px);
+    --toc-space-sm: var(--kern-metric-space-small, 8px);
+    --toc-space-md: var(--kern-metric-space-default, 16px);
+    --toc-space-lg: var(--kern-metric-space-large, 24px);
+    --toc-space-xl: var(--kern-metric-space-x-large, 32px);
+
+    /* Indentation for nested levels */
+    --toc-indent: var(--kern-metric-space-small, 8px);
+
+    /* Typography - Use Kern typography tokens */
+    --toc-font-family: var(--kern-typography-font-family-default, "Fira Sans", "Noto Sans", "SF Pro Text", "Segoe UI", Roboto, Arial, sans-serif);
+    --toc-font-size: var(--kern-typography-font-size-static-medium, 18px);
+    --toc-line-height: var(--kern-typography-line-height-static-medium, 24px);
+    --toc-font-weight-normal: var(--kern-typography-font-weight-regular, 400);
+    --toc-font-weight-bold: var(--kern-typography-font-weight-semi-bold, 600);
+
+    /* Border & Radius - Use Kern metric tokens */
+    --toc-border-width: var(--kern-metric-border-width-light, 1px);
+    --toc-border-radius: var(--kern-metric-border-radius-default, 4px);
+
+    /* Transitions */
+    --toc-transition-duration: 0.15s;
+    --toc-transition-easing: ease-in-out;
 }
 
 .kern-toc__header {
@@ -193,41 +232,68 @@
 }
 
 /* ====================================================================
-   Dropdown Layout
+   Compact Layout (Accordion with Kern UX Styling)
    ==================================================================== */
 
-.kern-toc--dropdown .kern-toc__toggle {
-    width: 100%;
-    text-align: left;
+/**
+ * Kern UX Accordion Component (native <details>/<summary>)
+ * @see https://www.kern-ux.de/komponenten/accordion
+ * @see https://gitlab.opencode.de/kern-ux/kern-ux-plain/-/blob/main/src/scss/core/components/_accordion.scss
+ *
+ * Uses native HTML5 elements with Kern UX design tokens.
+ * Fully accessible with keyboard navigation and screen reader support.
+ */
+
+/* Kern accordion inherits native styling - minimal overrides needed */
+.kern-toc--compact.kern-accordion {
+    margin-bottom: var(--kern-metric-space-default, 16px);
 }
 
-.kern-toc--dropdown .dropdown-menu {
-    width: 100%;
-    max-height: 400px;
-    overflow-y: auto;
-    background-color: var(--kern-color-layout-background-default);
-    border: var(--kern-metric-border-width-light, 1px) solid var(--kern-color-layout-border);
-    border-radius: var(--kern-metric-border-radius-default, 4px);
-    box-shadow: 0 var(--kern-metric-space-small, 8px) var(--kern-metric-space-default, 16px) rgba(0, 0, 0, 0.1);
+/* Accordion header (summary element) */
+.kern-toc--compact .kern-accordion__header {
+    /* Kern UX handles arrow indicator via ::after pseudo-element */
+    /* Icon automatically switches between arrow-down (closed) and arrow-up (open) */
 }
 
-.kern-toc--dropdown .kern-toc__item--level-2 .kern-toc__link {
+/* Accordion body (content area) */
+.kern-toc--compact .kern-accordion__body {
+    padding-top: var(--kern-metric-space-small, 8px);
+    padding-bottom: var(--kern-metric-space-small, 8px);
+}
+
+/* TOC link styling within compact layout */
+.kern-toc--compact .kern-toc__link {
+    display: block;
+    width: 100%;
+    padding: var(--kern-metric-space-small, 8px) var(--kern-metric-space-default, 16px);
+    border-left: none;
+    text-decoration: underline;
+    text-decoration-thickness: var(--kern-1, 1px);
+}
+
+.kern-toc--compact .kern-toc__link:hover {
+    background-color: var(--kern-color-action-state-indicator-tint-hover-opacity);
+    text-decoration-thickness: var(--kern-3, 3px);
+}
+
+/* Nested levels with Kern spacing */
+.kern-toc--compact .kern-toc__item--level-2 .kern-toc__link {
     padding-left: var(--kern-metric-space-default, 16px);
 }
 
-.kern-toc--dropdown .kern-toc__item--level-3 .kern-toc__link {
+.kern-toc--compact .kern-toc__item--level-3 .kern-toc__link {
     padding-left: var(--kern-metric-space-large, 24px);
 }
 
-.kern-toc--dropdown .kern-toc__item--level-4 .kern-toc__link {
+.kern-toc--compact .kern-toc__item--level-4 .kern-toc__link {
     padding-left: var(--kern-metric-space-x-large, 32px);
 }
 
-.kern-toc--dropdown .kern-toc__item--level-5 .kern-toc__link {
+.kern-toc--compact .kern-toc__item--level-5 .kern-toc__link {
     padding-left: calc(var(--kern-metric-space-x-large, 32px) + var(--kern-metric-space-small, 8px));
 }
 
-.kern-toc--dropdown .kern-toc__item--level-6 .kern-toc__link {
+.kern-toc--compact .kern-toc__item--level-6 .kern-toc__link {
     padding-left: calc(var(--kern-metric-space-x-large, 32px) + var(--kern-metric-space-default, 16px));
 }
 

@@ -1,0 +1,398 @@
+/**
+ * Table of Contents - Vanilla CSS Baseline
+ *
+ * Zero external dependencies - works standalone
+ * Framework-agnostic foundation for Bootstrap & Kern UX enhancements
+ * WCAG 2.1 AA compliant
+ * Supports: sidebar, inline, compact (accordion) layouts
+ *
+ * CSS Architecture:
+ * - toc-base.css       ← This file (vanilla baseline)
+ * - toc-bootstrap.css  ← Optional Bootstrap 5 enhancement
+ * - toc-kern.css       ← Optional Kern UX enhancement
+ * - toc-sticky.css     ← Sticky positioning (independent)
+ * - toc-scrollspy.css  ← Scrollspy active states (independent)
+ */
+
+/* ====================================================================
+   CSS Custom Properties - Vanilla Baseline
+   ==================================================================== */
+
+.toc {
+    /* Colors - Neutral palette (no framework bias) */
+    --toc-color-primary: #0066cc;
+    --toc-color-primary-hover: #004d99;
+    --toc-color-primary-active: #004d99;
+    --toc-color-text: #212529;
+    --toc-color-text-muted: #6c757d;
+    --toc-color-border: #dee2e6;
+    --toc-color-bg-active: rgba(0, 102, 204, 0.1);
+    --toc-color-bg-hover: #f8f9fa;
+
+    /* Spacing - Consistent scale */
+    --toc-space-xs: 0.25rem;
+    --toc-space-sm: 0.5rem;
+    --toc-space-md: 1rem;
+    --toc-space-lg: 1.5rem;
+    --toc-space-xl: 2rem;
+
+    /* Indentation for nested levels */
+    --toc-indent: 1rem;
+
+    /* Typography */
+    --toc-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --toc-font-size: 0.95rem;
+    --toc-line-height: 1.5;
+    --toc-font-weight-normal: 400;
+    --toc-font-weight-bold: 600;
+
+    /* Border & Radius */
+    --toc-border-width: 1px;
+    --toc-border-radius: 0.375rem;
+
+    /* Transitions */
+    --toc-transition-duration: 0.15s;
+    --toc-transition-easing: ease-in-out;
+}
+
+/* ====================================================================
+   Base TOC Styles
+   ==================================================================== */
+
+.toc {
+    font-family: var(--toc-font-family);
+    font-size: var(--toc-font-size);
+    line-height: var(--toc-line-height);
+    color: var(--toc-color-text);
+}
+
+.toc__header {
+    margin-bottom: var(--toc-space-md);
+    font-weight: var(--toc-font-weight-bold);
+    color: var(--toc-color-text);
+}
+
+.toc__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.toc__item {
+    margin: 0;
+}
+
+.toc__link {
+    display: block;
+    padding: var(--toc-space-sm);
+    color: var(--toc-color-primary);
+    text-decoration: none;
+    transition:
+        color var(--toc-transition-duration) var(--toc-transition-easing),
+        background-color var(--toc-transition-duration) var(--toc-transition-easing),
+        border-color var(--toc-transition-duration) var(--toc-transition-easing);
+    border-left: calc(var(--toc-border-width) * 2) solid transparent;
+}
+
+.toc__link:hover {
+    color: var(--toc-color-primary-hover);
+    text-decoration: underline;
+}
+
+.toc__link:focus {
+    outline: calc(var(--toc-border-width) * 2) solid var(--toc-color-primary);
+    outline-offset: calc(var(--toc-border-width) * 2);
+}
+
+/* Active state (scrollspy, navigation) */
+.toc__item.active > .toc__link,
+.toc__link.active,
+.toc__link:active {
+    color: var(--toc-color-primary-active);
+    background-color: var(--toc-color-bg-active);
+    border-left-color: var(--toc-color-primary-active);
+    font-weight: var(--toc-font-weight-bold);
+}
+
+/* ====================================================================
+   Sidebar Layout
+   ==================================================================== */
+
+.toc--sidebar {
+    border-left: var(--toc-border-width) solid var(--toc-border-color);
+    padding-left: 0;
+}
+
+.toc--sidebar .toc__list {
+    display: flex;
+    flex-direction: column;
+}
+
+.toc--sidebar .toc__link {
+    padding-left: var(--toc-space-md);
+}
+
+/* Nested levels with progressive indentation */
+.toc--sidebar .toc__item--level-2 .toc__link {
+    padding-left: var(--toc-space-md);
+}
+
+.toc--sidebar .toc__item--level-3 .toc__link {
+    padding-left: calc(var(--toc-space-md) + var(--toc-indent));
+}
+
+.toc--sidebar .toc__item--level-4 .toc__link {
+    padding-left: calc(var(--toc-space-md) + var(--toc-indent) * 2);
+}
+
+.toc--sidebar .toc__item--level-5 .toc__link {
+    padding-left: calc(var(--toc-space-md) + var(--toc-indent) * 3);
+}
+
+.toc--sidebar .toc__item--level-6 .toc__link {
+    padding-left: calc(var(--toc-space-md) + var(--toc-indent) * 4);
+}
+
+/* Scrollbar styling (Webkit browsers) */
+.toc--sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.toc--sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.toc--sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+/* ====================================================================
+   Inline Layout
+   ==================================================================== */
+
+.toc--inline {
+    margin-bottom: var(--toc-space-xl);
+}
+
+.toc--inline .toc__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--toc-space-sm);
+}
+
+.toc--inline .toc__link {
+    border-left: none;
+    padding: var(--toc-space-sm) var(--toc-space-md);
+    border-radius: var(--toc-border-radius);
+    background-color: var(--toc-color-bg-hover);
+    border: var(--toc-border-width) solid var(--toc-color-border);
+}
+
+.toc--inline .toc__link:hover {
+    background-color: var(--toc-color-border);
+}
+
+.toc--inline .toc__item.active > .toc__link,
+.toc--inline .toc__link.active {
+    background-color: var(--toc-color-bg-active);
+    border-color: var(--toc-color-primary-active);
+}
+
+/* ====================================================================
+   Compact Layout (Accordion with <details>/<summary>)
+   ==================================================================== */
+
+.toc--compact {
+    border: var(--toc-border-width) solid var(--toc-color-border);
+    border-radius: var(--toc-border-radius);
+    margin-bottom: var(--toc-space-md);
+}
+
+.toc__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--toc-space-sm) var(--toc-space-md);
+    font-size: var(--toc-font-size);
+    font-weight: var(--toc-font-weight-bold);
+    color: var(--toc-color-text);
+    background-color: var(--toc-color-bg-hover);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition:
+        background-color var(--toc-transition-duration) var(--toc-transition-easing);
+}
+
+.toc__summary::-webkit-details-marker {
+    display: none;
+}
+
+.toc__summary::after {
+    content: "";
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: var(--toc-space-sm);
+    border-left: 0.3em solid transparent;
+    border-right: 0.3em solid transparent;
+    border-top: 0.3em solid currentColor;
+    transition: transform var(--toc-transition-duration) var(--toc-transition-easing);
+}
+
+.toc--compact[open] .toc__summary::after {
+    transform: rotate(180deg);
+}
+
+.toc__summary:hover {
+    background-color: var(--toc-color-border);
+}
+
+.toc__summary:focus-visible {
+    outline: calc(var(--toc-border-width) * 2) solid var(--toc-color-primary);
+    outline-offset: calc(var(--toc-border-width) * -2);
+}
+
+.toc__body {
+    padding: var(--toc-space-sm) 0;
+    border-top: var(--toc-border-width) solid var(--toc-color-border);
+}
+
+.toc--compact .toc__link {
+    padding: var(--toc-space-sm) var(--toc-space-md);
+    border-left: none;
+}
+
+.toc--compact .toc__link:hover {
+    background-color: var(--toc-color-bg-hover);
+}
+
+/* Nested levels with progressive indentation */
+.toc--compact .toc__item--level-2 .toc__link {
+    padding-left: var(--toc-space-md);
+}
+
+.toc--compact .toc__item--level-3 .toc__link {
+    padding-left: calc(var(--toc-space-md) + var(--toc-indent));
+}
+
+.toc--compact .toc__item--level-4 .toc__link {
+    padding-left: calc(var(--toc-space-md) + var(--toc-indent) * 2);
+}
+
+.toc--compact .toc__item--level-5 .toc__link {
+    padding-left: calc(var(--toc-space-md) + var(--toc-indent) * 3);
+}
+
+.toc--compact .toc__item--level-6 .toc__link {
+    padding-left: calc(var(--toc-space-md) + var(--toc-indent) * 4);
+}
+
+/* ====================================================================
+   Accessibility - High Contrast Mode
+   ==================================================================== */
+
+@media (prefers-contrast: high) {
+    .toc {
+        --toc-color-primary: #004085;
+        --toc-color-primary-hover: #002752;
+        --toc-color-primary-active: #002752;
+        --toc-color-bg-active: #b8daff;
+    }
+
+    .toc__link {
+        border-width: 3px;
+    }
+}
+
+/* ====================================================================
+   Accessibility - Reduced Motion
+   ==================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .toc__link,
+    .toc__summary,
+    .toc__summary::after {
+        transition: none;
+    }
+}
+
+/* ====================================================================
+   Dark Mode Support
+   ==================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    .toc {
+        --toc-color-primary: #66b3ff;
+        --toc-color-primary-hover: #99ccff;
+        --toc-color-primary-active: #99ccff;
+        --toc-color-text: #f8f9fa;
+        --toc-color-text-muted: #adb5bd;
+        --toc-color-border: #495057;
+        --toc-color-bg-active: rgba(102, 179, 255, 0.15);
+        --toc-color-bg-hover: #343a40;
+    }
+
+    .toc__header {
+        color: var(--toc-color-text);
+    }
+}
+
+/* ====================================================================
+   Print Styles
+   ==================================================================== */
+
+@media print {
+    .toc--compact {
+        display: none !important;
+    }
+
+    .toc__link {
+        color: #000 !important;
+        background-color: transparent !important;
+        text-decoration: underline;
+        border: none !important;
+    }
+
+    .toc__item.active > .toc__link {
+        font-weight: var(--toc-font-weight-bold);
+    }
+}
+
+/* ====================================================================
+   Responsive Design
+   ==================================================================== */
+
+/* Mobile: Stack sidebar, vertical inline layout */
+@media (max-width: 768px) {
+    .toc--sidebar {
+        border-left: none;
+        border-top: var(--toc-border-width) solid var(--toc-color-border);
+        padding-top: var(--toc-space-md);
+        padding-left: 0;
+        margin-top: var(--toc-space-xl);
+    }
+
+    .toc--inline .toc__list {
+        flex-direction: column;
+    }
+
+    .toc--inline .toc__link {
+        width: 100%;
+    }
+}
+
+/* Tablet: Constrained sidebar width */
+@media (min-width: 769px) and (max-width: 1199px) {
+    .toc--sidebar {
+        max-width: 250px;
+    }
+}
+
+/* Desktop: Wider sidebar */
+@media (min-width: 1200px) {
+    .toc--sidebar {
+        max-width: 300px;
+    }
+}
